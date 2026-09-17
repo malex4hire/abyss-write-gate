@@ -178,3 +178,87 @@ def test_the_repository_scan_covers_escapes_as_well_as_characters():
     assert scan_repository(ROOT) == []
     planted = 'x = "' + BACKSLASH + 'u2014"'
     assert typography.escaped_occurrences(planted, "planted.py")
+
+
+# --- an unreadable file fails; the population is asserted -------------------
+
+
+def _tiny_repo(tmp_path: Path, files: dict) -> Path:
+    import subprocess
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    for name, body in files.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(body, bytes):
+            path.write_bytes(body)
+        else:
+            path.write_text(body, encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    return root
+
+
+def test_the_population_is_asserted_rather_than_implied():
+    population = typography.text_population(ROOT)
+    assert population.accounted()
+    assert population.listed == len(population.text) + len(population.binary)
+    assert len(population.text) > 40, "the scan read almost nothing"
+
+
+def test_an_unreadable_file_fails_the_scan_rather_than_shrinking_it(tmp_path):
+    """The class: a walk that drops what it cannot open reports green over the
+    one file that should have failed it."""
+    import os
+
+    if os.geteuid() == 0:
+        pytest.skip("running as root; chmod 000 does not deny a read")
+
+    root = _tiny_repo(tmp_path, {
+        "clean.md": "nothing to see\n",
+        "hidden.md": f"a planted {EM_DASH} dash\n",
+    })
+    before = typography.text_population(root)
+    assert before.listed == 2
+    assert len(occurrences((root / "hidden.md").read_text(encoding="utf-8"))) == 1
+
+    (root / "hidden.md").chmod(0o000)
+    try:
+        with pytest.raises(typography.UnreadableFile) as excinfo:
+            typography.scan_repository(root)
+        assert "hidden.md" in str(excinfo.value)
+    finally:
+        (root / "hidden.md").chmod(0o644)
+
+    after = typography.text_population(root)
+    assert after.listed == 2, "the population must not shrink"
+    assert len(typography.scan_repository(root)) == 1
+
+
+def test_a_tracked_file_missing_from_disk_fails_the_scan(tmp_path):
+    root = _tiny_repo(tmp_path, {"gone.md": "text\n"})
+    (root / "gone.md").unlink()
+    with pytest.raises(typography.UnreadableFile) as excinfo:
+        typography.text_population(root)
+    assert "gone.md" in str(excinfo.value)
+
+
+def test_a_binary_file_is_skipped_deliberately_and_still_counted(tmp_path):
+    """Skipping is allowed when the reason is 'this is not prose'. It is
+    counted, so the denominator still adds up."""
+    root = _tiny_repo(tmp_path, {
+        "notes.md": "text\n",
+        "blob.bin": bytes([0xFF, 0xFE, 0x00, 0x01]),
+    })
+    population = typography.text_population(root)
+    assert population.listed == 2
+    assert len(population.text) == 1
+    assert [p.name for p in population.binary] == ["blob.bin"]
+    assert population.accounted()
+
+
+def test_the_control_scans_a_clean_repository_green(tmp_path):
+    root = _tiny_repo(tmp_path, {"a.md": "clean prose\n", "b.py": "x = 1\n"})
+    assert typography.scan_repository(root) == []
+    assert typography.text_population(root).listed == 2

@@ -125,35 +125,78 @@ def escaped_occurrences(text: str, path: str = "<text>") -> list[Hit]:
     return hits
 
 
-def tracked_text_files(root: Path) -> list[Path]:
-    # `--others --exclude-standard` includes files not yet added. A new file
-    # carrying the character is invisible to `ls-files` until the commit that
-    # tracks it, which is one commit too late to be a gate.
+class UnreadableFile(RuntimeError):
+    """A listed file could not be opened.
+
+    The scan fails rather than continuing over a smaller population. A file that
+    cannot be read is not a file that contains nothing: dropping it shrinks the
+    denominator and reports green over content nobody looked at.
+    """
+
+
+@dataclass(frozen=True)
+class Population:
+    """What the scan actually read, and what it deliberately did not."""
+
+    listed: int
+    text: tuple[tuple[Path, str], ...]
+    binary: tuple[Path, ...]
+
+    def accounted(self) -> bool:
+        return len(self.text) + len(self.binary) == self.listed
+
+
+def text_population(root: Path) -> Population:
+    """Every listed file, read.
+
+    `--others --exclude-standard` includes files not yet added. A new file
+    carrying the character is invisible to `ls-files` until the commit that
+    tracks it, which is one commit too late to be a gate.
+
+    Undecodable content is a binary file and is counted as skipped. Anything
+    else that stops a read is an error, not a skip.
+    """
+    root = Path(root)
     listing = subprocess.run(
         ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"],
         capture_output=True,
         text=True,
         check=False,
     ).stdout.split()
-    files = []
+    text: list[tuple[Path, str]] = []
+    binary: list[Path] = []
     for name in listing:
-        path = Path(root) / name
+        path = root / name
         if not path.is_file():
-            continue
+            raise UnreadableFile(
+                f"{name} is listed by git but is not a readable file on disk"
+            )
         try:
-            path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue  # not a text file; nothing to read as prose
-        files.append(path)
-    return files
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            binary.append(path)
+        except OSError as exc:
+            raise UnreadableFile(f"{name} could not be read: {exc}") from exc
+        else:
+            text.append((path, content))
+    population = Population(len(listing), tuple(text), tuple(binary))
+    if not population.accounted():
+        raise UnreadableFile(
+            f"population mismatch: {len(listing)} listed, "
+            f"{len(text)} read, {len(binary)} skipped as binary"
+        )
+    return population
+
+
+def tracked_text_files(root: Path) -> list[Path]:
+    return [path for path, _ in text_population(Path(root)).text]
 
 
 def scan_repository(root: Path) -> list[Hit]:
     root = Path(root)
     hits: list[Hit] = []
-    for path in tracked_text_files(root):
-        text = path.read_text(encoding="utf-8")
+    for path, content in text_population(root).text:
         name = path.relative_to(root).as_posix()
-        hits.extend(occurrences(text, name))
-        hits.extend(escaped_occurrences(text, name))
+        hits.extend(occurrences(content, name))
+        hits.extend(escaped_occurrences(content, name))
     return hits

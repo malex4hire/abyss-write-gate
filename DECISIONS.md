@@ -578,3 +578,27 @@ sits happily between `RST-C1` and the `6` that follows it. Measured on a commit
 reading `RST-C16: front page`: the substring form reports RST-C1 covered, the
 boundary form does not, and the control, a commit genuinely naming RST-C1, still
 matches.
+
+## DR-039: An unreadable file fails the scan instead of shrinking it
+**Time:** 2026-09-17T17:44:00-04:00
+**Constraint:** RST-C13
+**Decision:** `text_population` raises `UnreadableFile` on anything that stops a
+read, counts undecodable content as a deliberate binary skip, and asserts that
+the files read plus the files skipped equal the files listed. `scan_repository`
+goes through it.
+**Rationale:** Arrived by hand from a parallel lane as a class to probe, and it
+was present in the code written for RST-C13 two commits earlier. The scan caught
+`UnicodeDecodeError` and `OSError` together and continued, so a file that could
+not be opened was indistinguishable from a file with nothing in it. A file
+denied by permissions would have been dropped and the scan would have reported
+green over it.
+
+The two cases are not the same and are now separated. Undecodable content is a
+binary file, there is no prose in it, and it is skipped and counted. Anything
+else is an error. The denominator is asserted rather than implied, because a
+population that shrinks quietly turns a smaller pass into an indistinguishable
+one.
+
+Measured in a temporary repository: two files, one carrying a planted dash.
+Readable, the scan returns one hit. With that file at mode 000 the scan raises
+and names it; under the previous code it returned no hits and passed.
