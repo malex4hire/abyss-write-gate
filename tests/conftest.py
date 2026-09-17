@@ -16,3 +16,15 @@ def store(tmp_path):
     built = build_world(tmp_path / "gate.db")
     yield built
     built.close()
+
+
+@pytest.fixture(scope="session")
+def hostile_run(tmp_path_factory):
+    """One full adversarial run, shared across the assertions made about it.
+
+    Session-scoped because the run is deterministic: every case builds its own
+    world, so sharing the RESULT shares no state between tests.
+    """
+    from gate.runner import execute_run
+
+    return execute_run(tmp_path_factory.mktemp("hostile-run"))

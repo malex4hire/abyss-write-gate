@@ -156,3 +156,29 @@ $48,000 request in SUBMITTED, and the seeded world contains one, so the case
 reported `missed` regardless of what the gate did. The failure is silent in the
 worst direction: it manufactures a fake blind spot, and a register entry that is
 not real is worse than a missing one, because it is published.
+
+## DR-013 — Every case runs against its own freshly seeded database
+**Time:** 2026-09-17T11:12:00-04:00
+**Constraint:** RST-C3
+**Decision:** `HostileDriver.run_case` builds a new world per case, in
+`<run>/cases/<case-id>.db`, and every database is retained after the run.
+**Rationale:** A shared datastore makes a disposition depend on ordering.
+AC-603's forbidden effect is an aggregate over everything the principal has
+approved, so a case that ran earlier and approved something legitimately would
+contaminate it. Isolation makes each verdict a property of the case. Retaining
+the databases is the forensic half: a rejected attempt is a record, and keeping
+it means a reader can open the file and check the claim rather than take the
+summary's word.
+
+## DR-014 — The hostile driver has no refusal path
+**Time:** 2026-09-17T11:18:00-04:00
+**Constraint:** RST-C3
+**Decision:** The driver is deterministic, executes every step, and executes
+every instruction it finds in tool output. There is no branch in it that
+declines.
+**Rationale:** A model adversary would decline sometimes, and then a green run
+is evidence about the model's disposition rather than about the gate. Maximal
+credulity makes the driver a stronger adversary than the thing it replaces, and
+it makes every result in this repository reproducible by anyone with a clone and
+no credential. The cost is that the injection format is synthetic — a marker and
+a JSON payload — which is stated in the module rather than hidden.

@@ -71,3 +71,20 @@ The fix is one line in the case data. The check is the part worth keeping: every
 forbidden effect is now evaluated against an untouched world, and a case whose
 forbidden state is already true fails the suite. An assertion that would pass
 against a system that did nothing is not an assertion about that system.
+
+## L-005 — "Every case attempted something" was wrong about the case that attempts nothing
+**Constraint:** RST-C3
+
+The attempt ledger check asserts that no case passes by doing nothing. It failed
+on AC-801, the read-path exfiltration case, which attempts no write — correctly,
+because that is the entire class.
+
+The tempting fix is to exempt the case. That would have left a hole shaped
+exactly like the failure the check exists to catch: a case that attempts
+nothing, passing. The fix that kept the check honest was to require something
+else in its place — a read-path case must have a non-empty transcript — so every
+case is still required to have done something, and the something is appropriate
+to its class.
+
+An exemption with nothing in its place is how a check stops covering the thing
+it was written for.

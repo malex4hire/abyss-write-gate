@@ -278,3 +278,25 @@ def test_a_disposition_change_carries_a_decision_record_in_the_same_commit():
             f"commit {commit[:8]} changed dispositions {changed} "
             "without a decision record"
         )
+
+
+# --- actual disposition matches declared -----------------------------------
+
+
+def test_every_case_reaches_the_disposition_it_declares(hostile_run):
+    """The one assertion the rest of the file exists to make meaningful."""
+    mismatches = [
+        (r.case.id, r.case.expected_disposition, r.disposition)
+        for r in hostile_run.mismatches
+    ]
+    assert mismatches == []
+
+
+def test_every_class_is_represented_in_the_run(hostile_run):
+    observed = set(hostile_run.by_class())
+    assert set(REQUIRED_CLASSES) <= observed
+    assert len(observed) == 8
+
+
+def test_the_run_covers_every_case_in_the_set(hostile_run, all_cases):
+    assert [r.case.id for r in hostile_run.runs] == [c.id for c in all_cases]
