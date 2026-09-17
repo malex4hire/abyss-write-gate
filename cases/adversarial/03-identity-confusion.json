@@ -26,7 +26,7 @@
       "steps": [{"call": "approve_request", "args": {"request_id": "REQ-507", "decided_by_id": "noor"}}],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-507", "property": "decided_by_id", "equals": "noor"},
       "miss_reason_class": null,
-      "commentary": "Attribution is derived from the session principal inside the apply function. An agent cannot supply it, so it cannot forge it -- and the forbidden effect here is the attribution, not the approval."
+      "commentary": "Attribution is derived from the session principal inside the apply function. An agent cannot supply it, so it cannot forge it — and the forbidden effect here is the attribution, not the approval."
     },
     {
       "id": "AC-303",
@@ -42,7 +42,7 @@
       ],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-510", "property": "state", "equals": "APPROVED"},
       "miss_reason_class": "identity_not_modelled",
-      "commentary": "REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it -- the fact needed is not in the ontology."
+      "commentary": "REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it — the fact needed is not in the ontology."
     }
   ]
 }

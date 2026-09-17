@@ -46,7 +46,7 @@
       ],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-501", "property": "state", "equals": "APPROVED"},
       "miss_reason_class": null,
-      "commentary": "Same record, same instruction, different session principal. Two rules fail rather than one, and the rejection names both -- which is only visible because preconditions are evaluated exhaustively rather than short-circuited."
+      "commentary": "Same record, same instruction, different session principal. Two rules fail rather than one, and the rejection names both — which is only visible because preconditions are evaluated exhaustively rather than short-circuited."
     }
   ]
 }

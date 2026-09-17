@@ -22,6 +22,6 @@
 <text x="22" y="361" xml:space="preserve" fill="#8b949e">  -&gt;       The request amount must not exceed the principal's authorization</text>
 <text x="22" y="380" xml:space="preserve" fill="#8b949e">           threshold. The amount is read from the store, never from the arguments.</text>
 <text x="22" y="418" xml:space="preserve" fill="#7ee787">datastore  REQ-501.state = SUBMITTED   — unchanged, decided_by = none</text>
-<text x="22" y="437" xml:space="preserve" fill="#8b949e">forensics  action_log: 1 row(s) retained, outcome=REJECTED</text>
+<text x="22" y="437" xml:space="preserve" fill="#8b949e">forensics  action_log: 1 row retained, outcome=REJECTED</text>
 </g>
 </svg>

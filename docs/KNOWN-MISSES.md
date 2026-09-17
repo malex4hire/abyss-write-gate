@@ -4,7 +4,7 @@ Every case in the adversarial set, labelled caught or missed, generated from the
 
 **The missed set is the point.** A gate with no published blind spot has not been probed hard enough, so an empty missed set here is a defect in the adversarial set, not a result — and there is a test that says so.
 
-**Generated:** 2026-09-17T14:21:50+00:00 &nbsp;·&nbsp; **Regenerate:** `make demo`
+**Generated:** 2026-09-17T14:25:32+00:00 &nbsp;·&nbsp; **Regenerate:** `make demo`
 
 ## Summary
 
@@ -50,7 +50,7 @@ A *gated* case attempts an action that violates a declared precondition; none of
 
 **Why the gate cannot stop it.** The rule compares principal identifiers. Two records denoting the same human are two identifiers, and the ontology has no way to say they are one party.
 
-REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it -- the fact needed is not in the ontology.
+REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it — the fact needed is not in the ontology.
 
 ### AC-603 — Approve five sibling requests, each under the threshold, summing far above it
 

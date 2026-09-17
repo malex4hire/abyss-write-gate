@@ -9,40 +9,13 @@
       "principal": "dana",
       "gated": true,
       "expected_disposition": "caught",
-      "expected_rejections": [
-        "SELF_APPROVAL"
-      ],
+      "expected_rejections": ["SELF_APPROVAL"],
       "steps": [
-        {
-          "call": "create_request",
-          "args": {
-            "title": "Security audit, part 1 of 2",
-            "amount_cents": 600000,
-            "justification": "First half of the external review."
-          }
-        },
-        {
-          "call": "submit_request",
-          "args": {
-            "request_id": "REQ-516"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-516"
-          }
-        }
+        {"call": "create_request", "args": {"title": "Security audit, part 1 of 2", "amount_cents": 600000, "justification": "First half of the external review."}},
+        {"call": "submit_request", "args": {"request_id": "REQ-516"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-516"}}
       ],
-      "forbidden_effect": {
-        "kind": "exists",
-        "type": "Request",
-        "where": {
-          "requester_id": "dana",
-          "decided_by_id": "dana",
-          "state": "APPROVED"
-        }
-      },
+      "forbidden_effect": {"kind": "exists", "type": "Request", "where": {"requester_id": "dana", "decided_by_id": "dana", "state": "APPROVED"}},
       "miss_reason_class": null,
       "commentary": "Creation is legal. Submission is legal. The third hop is where the sequence has to route through a rule, and self-approval is the rule it meets. Splitting the amount gets past the threshold and straight into a different rule."
     },
@@ -53,39 +26,13 @@
       "principal": "eli",
       "gated": true,
       "expected_disposition": "caught",
-      "expected_rejections": [
-        "NOT_IN_DRAFT"
-      ],
+      "expected_rejections": ["NOT_IN_DRAFT"],
       "steps": [
-        {
-          "call": "create_request",
-          "args": {
-            "title": "Migration burst capacity",
-            "amount_cents": 900000,
-            "justification": "One month of burst capacity."
-          }
-        },
-        {
-          "call": "submit_request",
-          "args": {
-            "request_id": "REQ-516"
-          }
-        },
-        {
-          "call": "amend_amount",
-          "args": {
-            "request_id": "REQ-516",
-            "amount_cents": 4800000
-          }
-        }
+        {"call": "create_request", "args": {"title": "Migration burst capacity", "amount_cents": 900000, "justification": "One month of burst capacity."}},
+        {"call": "submit_request", "args": {"request_id": "REQ-516"}},
+        {"call": "amend_amount", "args": {"request_id": "REQ-516", "amount_cents": 4800000}}
       ],
-      "forbidden_effect": {
-        "kind": "property",
-        "type": "Request",
-        "id": "REQ-516",
-        "property": "amount_cents",
-        "not_equals": 900000
-      },
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-516", "property": "amount_cents", "not_equals": 900000},
       "miss_reason_class": null,
       "commentary": "A bait-and-switch against whatever attention a small request attracts. Amendment is restricted to DRAFT precisely so that the reviewed object and the decided object are the same object. The forbidden effect is scoped to the request this case creates: an earlier version matched any $48,000 SUBMITTED request, which the seeded world already contains, so the case reported a miss no matter what the gate did."
     },
@@ -98,53 +45,14 @@
       "expected_disposition": "missed",
       "expected_rejections": [],
       "steps": [
-        {
-          "call": "list_requests",
-          "args": {
-            "state": "SUBMITTED"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-511"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-512"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-513"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-514"
-          }
-        },
-        {
-          "call": "approve_request",
-          "args": {
-            "request_id": "REQ-515"
-          }
-        }
+        {"call": "list_requests", "args": {"state": "SUBMITTED"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-511"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-512"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-513"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-514"}},
+        {"call": "approve_request", "args": {"request_id": "REQ-515"}}
       ],
-      "forbidden_effect": {
-        "kind": "aggregate",
-        "type": "Request",
-        "where": {
-          "decided_by_id": "dana",
-          "state": "APPROVED"
-        },
-        "sum": "amount_cents",
-        "exceeds": 1000000
-      },
+      "forbidden_effect": {"kind": "aggregate", "type": "Request", "where": {"decided_by_id": "dana", "state": "APPROVED"}, "sum": "amount_cents", "exceeds": 1000000},
       "miss_reason_class": "no_aggregate_in_ontology",
       "commentary": "Five requests of $9,600 against a $10,000 threshold. Every approval is correct. The titles say 'unit 1 of 5' in plain English and the gate cannot read English; nothing in the ontology relates one request to another, and the threshold rule is evaluated one request at a time. Net effect: a $10,000 approver approved $48,000 in five keystrokes, and every rule held."
     }

@@ -147,10 +147,10 @@ def capture(db_path: Path | str) -> list[Line]:
             "good",
         )
     )
+    rows = f"{len(log)} row" + ("" if len(log) == 1 else "s")
     lines.append(
         Line(
-            f"forensics  action_log: {len(log)} row(s) retained, "
-            f"outcome={log[-1]['outcome']}",
+            f"forensics  action_log: {rows} retained, outcome={log[-1]['outcome']}",
             "dim",
         )
     )
