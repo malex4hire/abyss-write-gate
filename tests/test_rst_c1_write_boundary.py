@@ -226,3 +226,39 @@ def test_the_schema_is_generated_from_the_ontology(store):
             for row in store.query(f"PRAGMA table_info({obj.table})")
         }
         assert columns == {p.name for p in obj.properties}
+
+
+# --- the write interface refuses two more things ---------------------------
+
+
+def test_an_action_context_cannot_rewrite_an_objects_identity(store):
+    """Substituting a key is not an update.
+
+    This test constructs the context class directly, which no module outside
+    the action layer may do -- that is what the AST scan above enforces, and it
+    is the layer that covers what the frame guard cannot. Doing it here is how
+    the guard inside `update` gets exercised at all.
+    """
+    from gate.store import ActionContext
+
+    with ActionContext(store, "test_identity", "dana", "tok-test") as ctx:
+        with pytest.raises(WriteBoundaryError) as excinfo:
+            ctx.update("Request", "REQ-501", {"request_id": "REQ-999"})
+    assert "identity" in str(excinfo.value)
+    assert store.get("Request", "REQ-501") is not None
+    assert store.get("Request", "REQ-999") is None
+
+
+def test_a_landed_write_with_no_forensic_record_is_not_reachable(store, monkeypatch):
+    """The mutation and its log row commit together, or neither does."""
+
+    def explode(*args, **kwargs):
+        raise RuntimeError("the ledger is unavailable")
+
+    before = dict(store.get("Request", "REQ-501"))
+    monkeypatch.setattr(store, "record_attempt", explode)
+    with pytest.raises(RuntimeError):
+        actions.invoke(store, "priya", "approve_request", {"request_id": "REQ-501"})
+    assert dict(store.get("Request", "REQ-501")) == before, (
+        "the write landed while its forensic record did not"
+    )

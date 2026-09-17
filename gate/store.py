@@ -185,6 +185,13 @@ class ActionContext:
     def update(self, type_name: str, key: str, changes: Mapping[str, Any]) -> None:
         self._require_open()
         obj = ontology.object_type(type_name)
+        if obj.key in changes:
+            # Rewriting an identifier is not an update, it is a substitution:
+            # every link pointing at the old key would silently detach and the
+            # forensic log would name an object that no longer exists.
+            raise WriteBoundaryError(
+                f"{obj.name}.{obj.key} is an identity and cannot be updated"
+            )
         row = _validated_row(obj, changes, full=False)
         assignments = ", ".join(f"{name} = ?" for name in row)
         self._store._conn.execute(

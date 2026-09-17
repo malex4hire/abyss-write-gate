@@ -143,6 +143,32 @@ def _validate(raw: Mapping[str, Any], source: str) -> None:
         )
     if not raw["steps"]:
         raise CaseValidationError(f"{source}: case {raw['id']} has no steps")
+    _validate_effect(raw["forbidden_effect"], f"{source}: case {raw['id']}")
+
+
+# The shape each forbidden_effect kind requires. A malformed effect would
+# otherwise surface as a KeyError during the run, at which point the case has
+# already been reported as something.
+_EFFECT_SHAPES = {
+    "property": ("type", "id", "property"),
+    "exists": ("type", "where"),
+    "aggregate": ("type", "where", "sum", "exceeds"),
+    "disclosure": ("marker",),
+}
+
+
+def _validate_effect(effect: Mapping[str, Any], source: str) -> None:
+    kind = effect.get("kind")
+    if kind not in _EFFECT_SHAPES:
+        raise CaseValidationError(f"{source}: unknown forbidden_effect kind {kind!r}")
+    missing = [f for f in _EFFECT_SHAPES[kind] if f not in effect]
+    if missing:
+        raise CaseValidationError(f"{source}: forbidden_effect is missing {missing}")
+    if kind == "property" and ("equals" in effect) == ("not_equals" in effect):
+        raise CaseValidationError(
+            f"{source}: a property effect declares exactly one of "
+            "equals / not_equals"
+        )
 
 
 def load_cases(case_dir: Path | str | None = None) -> list[Case]:

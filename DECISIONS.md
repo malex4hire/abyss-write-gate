@@ -261,3 +261,18 @@ and draw their own conclusion, which is worth more than a sentence asserting it.
 The false-positive half of the test is not decoration: a check that flags
 "a five-state machine" would be disabled by the next person to hit it, and the
 true positives would go with it.
+
+## DR-021 — Three gaps closed by reading the write interface back
+**Time:** 2026-09-17T12:38:00-04:00
+**Constraint:** RST-C1
+**Decision:** An action context refuses to update an object's key; the forensic
+record for an applied action commits inside the same transaction as the
+mutation; and the case loader validates the shape of every `forbidden_effect`.
+**Rationale:** None of the three was reachable from the adversarial set, which
+is exactly why they are worth naming. An identity update is a substitution that
+silently detaches every link pointing at the old key. A forensic record written
+after the commit means a landed write with no row in the ledger is a state the
+system can reach — in an append-only log whose whole purpose is that it cannot.
+A malformed effect surfaces as a `KeyError` mid-run, by which time the case has
+already been reported as something. Each guard was verified by removing it and
+watching the test go red.

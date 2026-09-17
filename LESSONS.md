@@ -88,3 +88,22 @@ to its class.
 
 An exemption with nothing in its place is how a check stops covering the thing
 it was written for.
+
+## L-006 — These three fixes were written code-first, and the mutation is what makes them defensible
+**Constraint:** RST-C1
+
+The discipline here is failing test, then code, then passing test. DR-021's
+three guards did not arrive that way: they came from reading the write
+interface back after it was working, and the code was written before the test.
+
+Recording it rather than quietly reordering the commit, because the interesting
+part is what stands in for the missing order. Each guard was removed afterwards
+and its test run: identity update, atomic forensic record, effect-shape
+validation — all three go red without the guard and green with it. That is the
+property test-first is a means to, and it is checkable after the fact in a way
+that "I wrote the test first" is not.
+
+The order is still the better habit, for a reason this case happens not to
+show: a test written after the code tends to test the code that exists rather
+than the requirement. The mutation check catches a guard that does nothing. It
+does not catch a guard that does the wrong thing confidently.

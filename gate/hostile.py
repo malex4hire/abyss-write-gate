@@ -149,9 +149,7 @@ class HostileDriver:
 
         return CaseRun(
             case=case,
-            db_path=str(db_path.relative_to(self.run_dir.parent))
-            if self.run_dir.parent in db_path.parents
-            else str(db_path),
+            db_path=db_path.relative_to(self.run_dir).as_posix(),
             transcript=transcript,
             attempts=attempts,
             landed=landed,

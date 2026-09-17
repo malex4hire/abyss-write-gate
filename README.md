@@ -89,10 +89,12 @@ the call stack, and is refused identically.
 
 Stated here rather than left for a reader to find:
 
-- **A caller holding the database connection could forge the context row in
-  SQL.** The Python guard makes that unreachable from inside the package and the
-  AST scan makes adding such a caller a test failure, but the database alone
-  does not distinguish a forged context from a real one.
+- **A caller inside the process could forge a write context** — by setting the
+  context row in SQL, or by constructing the context class directly rather than
+  asking the store for one. The frame guard closes the front door and the AST
+  scan makes adding such a caller a test failure, but the database alone cannot
+  tell a forged context from a real one. The layers are ordered so that doing it
+  requires editing a file the suite reads.
 - **The read path is not gated at all.** AC-801 is in the register for exactly
   this reason. Everything demonstrated here is about writes.
 - **The injection format is synthetic** — a marker and a JSON payload, which the

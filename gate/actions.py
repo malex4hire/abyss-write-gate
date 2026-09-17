@@ -366,19 +366,20 @@ def invoke(
     if failures:
         return refuse(failures)
 
-    # 4. apply
+    # 4. apply -- the mutation and its forensic record commit together, so a
+    #    landed write with no row in the log is not a state this can reach.
     with store.action_context(action_name, principal_id) as ctx:
         effect = spec.apply(ctx, facts, store)
-    seq = store.record_attempt(
-        case_id=case_id,
-        principal_id=principal_id,
-        action=action_name,
-        args=args,
-        via=via,
-        outcome=APPLIED,
-        rejection_codes=(),
-        message="",
-    )
+        seq = store.record_attempt(
+            case_id=case_id,
+            principal_id=principal_id,
+            action=action_name,
+            args=args,
+            via=via,
+            outcome=APPLIED,
+            rejection_codes=(),
+            message="",
+        )
     return Result(
         action=action_name,
         principal_id=principal_id,

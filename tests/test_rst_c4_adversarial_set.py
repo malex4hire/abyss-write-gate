@@ -299,3 +299,31 @@ def test_every_class_is_represented_in_the_run(hostile_run):
 
 def test_the_run_covers_every_case_in_the_set(hostile_run, all_cases):
     assert [r.case.id for r in hostile_run.runs] == [c.id for c in all_cases]
+
+
+# --- the loader validates the forbidden effect ------------------------------
+
+
+@pytest.mark.parametrize(
+    "effect,fragment",
+    [
+        ({"kind": "invented", "type": "Request"}, "unknown forbidden_effect kind"),
+        ({"kind": "property", "type": "Request", "id": "REQ-1"}, "is missing"),
+        (
+            {"kind": "property", "type": "Request", "id": "R", "property": "state",
+             "equals": "APPROVED", "not_equals": "DRAFT"},
+            "exactly one of",
+        ),
+        (
+            {"kind": "property", "type": "Request", "id": "R", "property": "state"},
+            "exactly one of",
+        ),
+        ({"kind": "aggregate", "type": "Request", "where": {}}, "is missing"),
+        ({"kind": "disclosure"}, "is missing"),
+    ],
+)
+def test_the_loader_refuses_a_malformed_forbidden_effect(tmp_path, effect, fragment):
+    directory = _write_case_file(tmp_path, _base_case(forbidden_effect=effect))
+    with pytest.raises(CaseValidationError) as excinfo:
+        load_cases(directory)
+    assert fragment in str(excinfo.value)
