@@ -55,3 +55,19 @@ def lead_reference(readme_text: str) -> tuple[str | None, bool]:
     fold = above_the_fold(readme_text)
     found = CASE_REFERENCE.search(fold)
     return (found.group(1) if found else None), bool(REGISTER_LINK.search(fold))
+
+
+# A constraint identifier is a prefix of every longer one: `RST-C1` is a
+# substring of `RST-C10`, `RST-C11` and `RST-C16`. A plain `in` test therefore
+# reports RST-C1 as covered by a commit that names only RST-C16, which is wrong
+# today rather than prospectively: this repository has sixteen constraints.
+_TRAILING_DIGIT = "(?!\\d)"
+
+
+def names_constraint(text: str, identifier: str) -> bool:
+    """True when `text` names exactly this constraint.
+
+    The boundary is a negative lookahead on a digit rather than `\\b`, because
+    `\\b` sits happily between `RST-C1` and the `6` that follows it.
+    """
+    return re.search(re.escape(identifier) + _TRAILING_DIGIT, text) is not None

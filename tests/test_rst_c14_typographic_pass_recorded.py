@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from publish.readme import names_constraint
+
 ROOT = Path(__file__).resolve().parent.parent
 DECISIONS = ROOT / "DECISIONS.md"
 
@@ -37,7 +39,11 @@ def log_text() -> str:
 
 @pytest.fixture(scope="module")
 def record(log_text) -> dict:
-    found = [r for r in _records(log_text) if "**Constraint:** RST-C14" in r["body"]]
+    found = [
+        r
+        for r in _records(log_text)
+        if names_constraint(r["body"], "**Constraint:** RST-C14")
+    ]
     assert len(found) == 1, f"expected one RST-C14 record, found {len(found)}"
     return found[0]
 

@@ -13,6 +13,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from publish.readme import names_constraint
+
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -135,7 +137,9 @@ def test_at_least_one_commit_names_each_constraint():
     commits = _git_log()
     if not commits:
         pytest.skip("not a git checkout")
-    missing = [rst for rst in RST_IDS if not any(rst in c for c in commits)]
+    missing = [
+        rst for rst in RST_IDS if not any(names_constraint(c, rst) for c in commits)
+    ]
     assert missing == [], f"constraints with no commit: {missing}"
 
 
@@ -203,3 +207,36 @@ def test_the_elapsed_time_check_does_not_fire_on_ordinary_prose():
         "The gate refused every one of them.",
     ):
         assert elapsed_time_claims(benign) == [], f"false positive on {benign!r}"
+
+
+# --- identifiers are matched on a boundary, not as substrings ---------------
+
+
+def test_a_constraint_is_not_named_by_a_longer_identifier():
+    """`RST-C1` is a substring of `RST-C16`. A plain `in` test reports RST-C1 as
+    covered by a commit that names only RST-C16, and this repository has
+    sixteen constraints, so that is wrong now rather than later."""
+    commit = "RST-C16: front page"
+    assert "RST-C1" in commit, "the substring really is there"
+    assert not names_constraint(commit, "RST-C1")
+    assert not names_constraint(commit, "RST-C6")
+
+
+def test_a_constraint_is_named_by_its_own_identifier():
+    """The control. A check that can only go red is indistinguishable from a
+    broken one."""
+    assert names_constraint("RST-C1: actions are the only write path", "RST-C1")
+    assert names_constraint("RST-C16: front page", "RST-C16")
+    assert names_constraint("RST-C10, RST-C11, RST-C12: verify", "RST-C11")
+
+
+def test_every_constraint_coverage_claim_survives_the_boundary():
+    """The real check, re-run: no constraint is covered only by a longer one."""
+    commits = _git_log()
+    if not commits:
+        pytest.skip("not a git checkout")
+    for rst in RST_IDS:
+        loose = [c for c in commits if rst in c]
+        strict = [c for c in commits if names_constraint(c, rst)]
+        assert strict, f"{rst} is named by no commit under a boundary match"
+        assert loose, f"{rst} is named by no commit at all"

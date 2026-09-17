@@ -560,3 +560,21 @@ being true, which is the same failure as a typed number inside a generated
 document. A range is worse than a count because both endpoints rot and the lower
 one looks permanent. The count stays in prose because a README cannot compute,
 but it is now compared against the tree on every run.
+
+## DR-038: Constraint identifiers are matched on a boundary, not as substrings
+**Time:** 2026-09-17T17:30:00-04:00
+**Constraint:** RST-C8
+**Decision:** `names_constraint` matches an identifier followed by anything that
+is not a digit, and the commit-coverage check in `tests/test_rst_c8_build_log.py`
+uses it. The RST-C14 record lookup uses it too.
+**Rationale:** Arrived by hand from a parallel lane as a class to probe, and it
+was present. The check read `any(rst in c for c in commits)`, and `RST-C1` is a
+substring of `RST-C16`, so a commit naming only RST-C16 reported RST-C1 as
+covered. That is wrong now rather than prospectively: this repository has
+sixteen constraints, and the front-page work is what took it past nine.
+
+The boundary is a negative lookahead on a digit rather than `\b`, because `\b`
+sits happily between `RST-C1` and the `6` that follows it. Measured on a commit
+reading `RST-C16: front page`: the substring form reports RST-C1 covered, the
+boundary form does not, and the control, a commit genuinely naming RST-C1, still
+matches.
