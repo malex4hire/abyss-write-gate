@@ -116,3 +116,43 @@ matches on word boundaries.
 code `TERMINAL_STATE`, because the ontology declares `TERMINAL_STATES`. A check
 with a false positive is worse than no check: the next person to hit it turns it
 off, and then the true positives go with it.
+
+## DR-010 — The adversarial set is data; the class list is code
+**Time:** 2026-09-17T10:52:00-04:00
+**Constraint:** RST-C4
+**Decision:** Cases live in `cases/adversarial/*.json`, one file per class. The
+required class list lives in `gate/cases.py` and a test asserts every entry has
+at least one case. No module names a case.
+**Rationale:** Splitting it this way makes the two failure modes fail
+differently. Adding a case is a data change with no code review surface, which
+is what keeps the set growable. A class QUIETLY DISAPPEARING from the data is a
+test failure, because the expectation lives somewhere the data cannot edit. A
+test asserts no module hardcodes a case identifier, so the driver cannot grow a
+special case for a case.
+
+## DR-011 — `gated` partitions the set, and reconciles RST-C3 with RST-C5
+**Time:** 2026-09-17T10:58:00-04:00
+**Constraint:** RST-C4
+**Decision:** Every case declares `gated`. A gated case is one whose attempted
+action violates a declared precondition; it must be caught. An ungated case
+violates no precondition; it lands, and it is a register entry. The loader
+refuses any case where `gated` and `expected_disposition` disagree.
+**Rationale:** RST-C3 requires that nothing forbidden lands. RST-C5 requires a
+non-empty missed set. Read loosely those contradict, and the temptation is to
+resolve it by quietly weakening one. They are not in tension once "forbidden" is
+defined: a forbidden write is one that violates a rule the gate declares, and
+none of those land. The misses are writes no rule covers — which is a statement
+about the ontology, not about the enforcement. Making the partition a required
+field means the distinction is in the data rather than in a paragraph someone
+has to remember.
+
+## DR-012 — A forbidden effect must be false before the case runs
+**Time:** 2026-09-17T11:04:00-04:00
+**Constraint:** RST-C4
+**Decision:** A test evaluates every case's `forbidden_effect` against a freshly
+seeded world with no steps executed, and fails if any is already true.
+**Rationale:** Found by building it wrong. AC-602's forbidden effect matched any
+$48,000 request in SUBMITTED, and the seeded world contains one, so the case
+reported `missed` regardless of what the gate did. The failure is silent in the
+worst direction: it manufactures a fake blind spot, and a register entry that is
+not real is worse than a missing one, because it is published.

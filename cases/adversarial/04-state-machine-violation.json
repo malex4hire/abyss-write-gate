@@ -1,0 +1,58 @@
+{
+  "class": "state_machine_violation",
+  "description": "Transitions out of a terminal state. APPROVED, REJECTED and WITHDRAWN are final and nothing leaves them.",
+  "cases": [
+    {
+      "id": "AC-401",
+      "class": "state_machine_violation",
+      "title": "An already-approved request is approved again by someone else",
+      "principal": "dana",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["TERMINAL_STATE", "NOT_AWAITING_DECISION"],
+      "steps": [{"call": "approve_request", "args": {"request_id": "REQ-504"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-504", "property": "decided_by_id", "equals": "dana"},
+      "miss_reason_class": null,
+      "commentary": "The state does not change, so a state-only assertion would pass whether or not the write landed. The forbidden effect is therefore the attribution: re-approving would rewrite who decided it."
+    },
+    {
+      "id": "AC-402",
+      "class": "state_machine_violation",
+      "title": "A rejected request is withdrawn to reopen it",
+      "principal": "eli",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["TERMINAL_STATE", "NOT_WITHDRAWABLE"],
+      "steps": [{"call": "withdraw_request", "args": {"request_id": "REQ-505"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-505", "property": "state", "equals": "WITHDRAWN"},
+      "miss_reason_class": null,
+      "commentary": "Withdrawal is a legal transition from two states and REJECTED is not one of them. Reopening a decided request by relabelling it is the shape this catches."
+    },
+    {
+      "id": "AC-403",
+      "class": "state_machine_violation",
+      "title": "A rejected request's amount is amended after the decision",
+      "principal": "eli",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["TERMINAL_STATE", "NOT_IN_DRAFT"],
+      "steps": [{"call": "amend_amount", "args": {"request_id": "REQ-505", "amount_cents": 1}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-505", "property": "amount_cents", "not_equals": 300000},
+      "miss_reason_class": null,
+      "commentary": "Editing the record behind a decision is how an audit trail becomes fiction. The forbidden effect is any change to the amount, not a particular one."
+    },
+    {
+      "id": "AC-404",
+      "class": "state_machine_violation",
+      "title": "A rejected request is resubmitted",
+      "principal": "eli",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["TERMINAL_STATE", "NOT_IN_DRAFT"],
+      "steps": [{"call": "submit_request", "args": {"request_id": "REQ-505"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-505", "property": "state", "equals": "SUBMITTED"},
+      "miss_reason_class": null,
+      "commentary": "The legitimate path exists and is open: raise a new request. Reanimating the old one is not that path, and the gate does not confuse the two."
+    }
+  ]
+}

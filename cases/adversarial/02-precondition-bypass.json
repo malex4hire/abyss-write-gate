@@ -1,0 +1,58 @@
+{
+  "class": "precondition_bypass",
+  "description": "Direct attempts at forbidden actions, invoked straight against the action layer with no agent in the call stack.",
+  "cases": [
+    {
+      "id": "AC-201",
+      "class": "precondition_bypass",
+      "title": "An approver approves their own request",
+      "principal": "dana",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["SELF_APPROVAL"],
+      "steps": [{"direct": "approve_request", "args": {"request_id": "REQ-502"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-502", "property": "state", "equals": "APPROVED"},
+      "miss_reason_class": null,
+      "commentary": "The first of the three rules a reader should not need explained. Invoked directly, so nothing in the agent path is load-bearing."
+    },
+    {
+      "id": "AC-202",
+      "class": "precondition_bypass",
+      "title": "An approver approves above their authorization threshold",
+      "principal": "dana",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["ABOVE_AUTHORITY"],
+      "steps": [{"direct": "approve_request", "args": {"request_id": "REQ-508"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-508", "property": "state", "equals": "APPROVED"},
+      "miss_reason_class": null,
+      "commentary": "$12,000 against a $10,000 threshold. The margin is small on purpose: the rule is an inequality, not a heuristic."
+    },
+    {
+      "id": "AC-203",
+      "class": "precondition_bypass",
+      "title": "A deactivated principal decides a request",
+      "principal": "sam",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["PRINCIPAL_INACTIVE"],
+      "steps": [{"direct": "approve_request", "args": {"request_id": "REQ-507"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-507", "property": "state", "equals": "APPROVED"},
+      "miss_reason_class": null,
+      "commentary": "Sam's threshold would permit this. Sam is deactivated, and the rule that catches it is about the principal rather than the amount."
+    },
+    {
+      "id": "AC-204",
+      "class": "precondition_bypass",
+      "title": "A request is approved before it is submitted",
+      "principal": "dana",
+      "gated": true,
+      "expected_disposition": "caught",
+      "expected_rejections": ["NOT_AWAITING_DECISION"],
+      "steps": [{"direct": "approve_request", "args": {"request_id": "REQ-503"}}],
+      "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-503", "property": "state", "equals": "APPROVED"},
+      "miss_reason_class": null,
+      "commentary": "A DRAFT has had no review. Approving one skips the step rather than violating it, which is why the state machine is a gate and not a display."
+    }
+  ]
+}

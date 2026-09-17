@@ -53,3 +53,21 @@ that had done nothing wrong.
 
 A check is not correct because it is green. It is correct when you have seen it
 be right about something.
+
+## L-004 — A forbidden-effect predicate matched the world before the case ran
+**Constraint:** RST-C4
+
+AC-602 creates a request, submits it, then tries to amend the amount upward to
+$48,000. Its forbidden effect was "a request exists with amount 4,800,000 in
+state SUBMITTED". The seeded world already contains exactly that: REQ-501. The
+case reported `missed` on its first run, and the gate had refused the amendment
+correctly.
+
+The bug is not in the gate and not in the driver. It is in the measurement, and
+it manufactured a blind spot that did not exist — in a repository whose most
+valuable artifact is a published list of blind spots.
+
+The fix is one line in the case data. The check is the part worth keeping: every
+forbidden effect is now evaluated against an untouched world, and a case whose
+forbidden state is already true fails the suite. An assertion that would pass
+against a system that did nothing is not an assertion about that system.
