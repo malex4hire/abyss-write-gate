@@ -96,3 +96,23 @@ from fixtures on every run and nothing is expected to survive a crash, so
 durability buys nothing here and costs the one property RST-C7 cares about:
 that a clean clone runs the whole thing quickly enough that a reader actually
 does it.
+
+## DR-008 — Rule coverage is asserted, not reviewed
+**Time:** 2026-09-17T10:32:00-04:00
+**Constraint:** RST-C2
+**Decision:** A test derives the set of (action, precondition) pairs from the
+registry and asserts that the violation table exercises every one of them.
+**Rationale:** The failure mode for a rule table is not a wrong rule, it is a
+rule nobody tests, which then stops holding without anything going red. Deriving
+the expected set from the registry means adding a precondition without a
+violating case is a test failure on the commit that adds it.
+
+## DR-009 — Identifier matches in source scans are whole-token, never substring
+**Time:** 2026-09-17T10:38:00-04:00
+**Constraint:** RST-C2
+**Decision:** The scan asserting that no module re-implements a rejection code
+matches on word boundaries.
+**Rationale:** The substring form reported `gate/ontology.py` for the rejection
+code `TERMINAL_STATE`, because the ontology declares `TERMINAL_STATES`. A check
+with a false positive is worse than no check: the next person to hit it turns it
+off, and then the true positives go with it.

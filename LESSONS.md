@@ -36,3 +36,20 @@ still gets its own database.
 
 The general form: a slow suite is a measurement before it is a design
 conclusion.
+
+## L-003 — The first version of the rule-drift scan had a false positive
+**Constraint:** RST-C2
+
+The scan asserting that no module outside the rule layer names a rejection code
+used `code in text`. It immediately flagged `gate/ontology.py` for
+`TERMINAL_STATE` — because the ontology declares the constant `TERMINAL_STATES`,
+whose name contains it.
+
+Two things followed. The obvious one: match on whole tokens. The one worth
+recording: this fired on the first run, against a clean tree, which is the only
+reason it was caught at all. Had the ontology used a different constant name,
+the scan would have passed, shipped, and gone off months later against a file
+that had done nothing wrong.
+
+A check is not correct because it is green. It is correct when you have seen it
+be right about something.
