@@ -13,11 +13,11 @@ phases regardless of who called it:
 The principal is a parameter of ``invoke``, not of the action's argument
 schema. An agent therefore has no argument through which to name a principal:
 it acts as whoever the harness bound it to, and the schema refuses the rest.
-Every attempt that reaches a verdict -- applied or rejected -- appends one row
-to the forensic log, and an applied write commits with its row or not at all.
-An action that raises part-way through appends nothing, because the whole
-transaction including the row is rolled back; that is the deliberate trade and
-it is why the claim here is about verdicts rather than about attempts.
+Every attempt appends exactly one row to the forensic log. An applied write
+commits with its row or not at all -- they are the same transaction. An action
+that raises part-way through rolls that transaction back, row included, and
+then appends an ERRORED row outside it, so a crash is a record rather than a
+silence.
 """
 
 from __future__ import annotations
@@ -46,6 +46,7 @@ from .store import ActionContext, Store
 
 APPLIED = "APPLIED"
 REJECTED = "REJECTED"
+ERRORED = "ERRORED"
 
 
 @dataclass(frozen=True)
@@ -372,18 +373,39 @@ def invoke(
 
     # 4. apply -- the mutation and its forensic record commit together, so a
     #    landed write with no row in the log is not a state this can reach.
-    with store.action_context(action_name, principal_id) as ctx:
-        effect = spec.apply(ctx, facts, store)
-        seq = store.record_attempt(
-            case_id=case_id,
-            principal_id=principal_id,
-            action=action_name,
-            args=args,
-            via=via,
-            outcome=APPLIED,
-            rejection_codes=(),
-            message="",
-        )
+    try:
+        with store.action_context(action_name, principal_id) as ctx:
+            effect = spec.apply(ctx, facts, store)
+            seq = store.record_attempt(
+                case_id=case_id,
+                principal_id=principal_id,
+                action=action_name,
+                args=args,
+                via=via,
+                outcome=APPLIED,
+                rejection_codes=(),
+                message="",
+            )
+    except Exception as exc:
+        # The transaction has rolled back and taken the row above with it. A
+        # crash that leaves no trace of having been attempted is the one gap
+        # atomicity opens, so the record is appended outside the transaction
+        # that just failed -- and a failure to record must not mask the
+        # failure being recorded.
+        try:
+            store.record_attempt(
+                case_id=case_id,
+                principal_id=principal_id,
+                action=action_name,
+                args=args,
+                via=via,
+                outcome=ERRORED,
+                rejection_codes=("ACTION_RAISED",),
+                message=f"{type(exc).__name__}: {exc}",
+            )
+        except Exception:  # pragma: no cover - the ledger itself is unavailable
+            pass
+        raise
     return Result(
         action=action_name,
         principal_id=principal_id,

@@ -8,6 +8,7 @@ here performs the forbidden operation itself.
 from __future__ import annotations
 
 import ast
+import dataclasses
 import sqlite3
 from pathlib import Path
 
@@ -281,3 +282,35 @@ def test_an_update_that_changes_nothing_is_refused_by_the_write_interface(store)
         with pytest.raises(WriteBoundaryError) as excinfo:
             ctx.update("Request", "REQ-501", {})
     assert "must change something" in str(excinfo.value)
+
+
+def test_an_action_that_raises_is_rolled_back_and_recorded(store, monkeypatch):
+    """Atomicity opens exactly one gap: a crash leaving no trace of the attempt.
+
+    The applied row and the mutation share a transaction, so a raising action
+    loses both. The ERRORED row is appended outside that transaction, which is
+    what keeps 'every attempt appends one row' true rather than nearly true.
+    """
+    from gate import actions as action_module
+
+    def explode(ctx, facts, store_):
+        ctx.update("Request", facts.request["request_id"], {"state": ontology.APPROVED})
+        raise RuntimeError("apply blew up after writing")
+
+    spec = action_module.REGISTRY["approve_request"]
+    monkeypatch.setitem(
+        action_module.REGISTRY,
+        "approve_request",
+        dataclasses.replace(spec, apply=explode),
+    )
+
+    before = dict(store.get("Request", "REQ-501"))
+    with pytest.raises(RuntimeError):
+        actions.invoke(store, "priya", "approve_request", {"request_id": "REQ-501"})
+
+    assert dict(store.get("Request", "REQ-501")) == before, "the write survived the crash"
+    rows = store.attempts()
+    assert len(rows) == 1, "the attempt left no forensic trace"
+    assert rows[0]["outcome"] == actions.ERRORED
+    assert rows[0]["rejection_codes"] == "ACTION_RAISED"
+    assert "apply blew up" in rows[0]["message"]

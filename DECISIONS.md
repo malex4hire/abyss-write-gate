@@ -332,3 +332,18 @@ raising kills the entire rejection rather than its own rule: attaching
 `REASON_PRESENT` to `approve_request` would have been a live `KeyError` at the
 write boundary with no forensic row. Only the ordering of the argument phase
 before the rule phase was preventing it, and an ordering is not a declaration.
+
+## DR-026 — A crashed action is recorded, not weakened into a footnote
+**Time:** 2026-09-17T13:52:00-04:00
+**Constraint:** RST-C1
+**Decision:** An action that raises rolls back — mutation and forensic row
+together — and then appends an `ERRORED` row outside the failed transaction.
+The recording is itself guarded so a broken ledger cannot mask the failure it
+is trying to record.
+**Rationale:** Atomicity between the write and its row opens exactly one gap: a
+crash leaves no trace that the action was ever attempted. The first response was
+to narrow the module's claim from "every attempt" to "every verdict", which is
+honest and is the wrong repair — the claim was worth keeping. Appending the
+ERRORED row outside the rolled-back transaction keeps both properties: an
+applied write still commits with its row or not at all, and a crash is a record
+rather than a silence. Removing the ERRORED append goes red.
