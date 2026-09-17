@@ -434,3 +434,18 @@ depend on the weather. The checker opens sockets by definition. Putting it in
 `gate/` would have forced a weakening of the RST-C7 scan — which is the shape of
 every bypass this repository argues against, arriving as a reasonable
 convenience.
+
+## DR-033 — The rendered image source is fetched, not assumed
+**Time:** 2026-09-17T15:52:00-04:00
+**Constraint:** RST-C10
+**Decision:** `check_above_fold` extracts the `src` from the first `<img>`
+above the first heading, resolves it — relative, root-relative or absolute —
+fetches it, and requires a 200 with an `image/*` content type.
+**Rationale:** The check previously asserted that an `<img>` tag existed above
+the first heading, and a separate check asserted the raw asset was reachable.
+Neither asserted that the src THE RENDERED VIEW CARRIES resolves to it. A
+visitor sees a broken image in exactly that case and both checks stay green,
+which on a flagship above-fold artifact is the most expensive failure available
+and was the one the constraint was written to prevent. The three src forms
+resolve against three different bases, and guessing one would make the check
+pass by accident on the other two.

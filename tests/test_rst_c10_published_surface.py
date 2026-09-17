@@ -194,3 +194,63 @@ def test_a_register_missing_its_lead_entry_fails(fetcher):
 def test_an_unreachable_register_is_unavailable(fetcher):
     fetcher.unavailable.add(f"{API}/contents/docs/KNOWN-MISSES.md")
     assert _run(surface.check_register, fetcher).status == UNAVAILABLE
+
+
+# --- the rendered image src actually resolves -------------------------------
+#
+# The gap this closes: an <img> above the first heading proves a tag is there,
+# and a reachable raw asset proves the file is there. Neither proves the SRC
+# THE RENDERED VIEW CARRIES resolves to it. A visitor sees a broken image in
+# exactly that case, and both checks stay green.
+
+
+def test_the_rendered_image_source_is_fetched_not_assumed(fetcher):
+    result = _run(surface.check_above_fold, fetcher)
+    assert result.status == PASS
+    assert f"{RAW}/assets/blocked-write.svg" in fetcher.requested, (
+        "the check never fetched the src it found"
+    )
+
+
+def test_a_rendered_image_source_that_404s_fails(fetcher):
+    fetcher.responses[f"{API}/readme"] = Response(
+        200, b'<article><img src="assets/moved-away.svg"><h1>t</h1></article>', "text/html"
+    )
+    result = _run(surface.check_above_fold, fetcher)
+    assert result.status == FAIL
+    assert "moved-away.svg" in result.detail
+
+
+def test_a_rendered_image_source_serving_non_image_content_fails(fetcher):
+    fetcher.responses[f"{RAW}/assets/blocked-write.svg"] = Response(
+        200, b"<html>not found, have a page instead</html>", "text/html"
+    )
+    result = _run(surface.check_above_fold, fetcher)
+    assert result.status == FAIL
+    assert "image" in result.detail
+
+
+def test_an_unreachable_image_source_is_unavailable_not_broken(fetcher):
+    fetcher.unavailable.add(f"{RAW}/assets/blocked-write.svg")
+    result = _run(surface.check_above_fold, fetcher)
+    assert result.status == UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "src,expected",
+    [
+        ("assets/blocked-write.svg", f"{RAW}/assets/blocked-write.svg"),
+        ("/malex4hire/abyss-write-gate/raw/main/x.svg",
+         "https://github.com/malex4hire/abyss-write-gate/raw/main/x.svg"),
+        ("https://camo.githubusercontent.com/abc", "https://camo.githubusercontent.com/abc"),
+        ("assets/a%20b.svg", f"{RAW}/assets/a%20b.svg"),
+    ],
+)
+def test_every_src_form_a_renderer_emits_is_resolved(src, expected):
+    assert surface.resolve_src(src, OWNER, NAME, BRANCH) == expected
+
+
+def test_an_html_escaped_src_is_unescaped_before_fetching():
+    assert surface.resolve_src("https://x/y?a=1&amp;b=2", OWNER, NAME, BRANCH) == (
+        "https://x/y?a=1&b=2"
+    )

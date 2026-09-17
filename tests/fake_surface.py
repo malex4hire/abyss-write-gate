@@ -19,9 +19,13 @@ API = f"https://api.github.com/repos/{OWNER}/{NAME}"
 RAW = f"https://raw.githubusercontent.com/{OWNER}/{NAME}/main"
 HTML = f"https://github.com/{OWNER}/{NAME}"
 
+# The shape GitHub's API render actually returns: the image src stays RELATIVE.
+# The first version of this fake used a camo URL, which is what the github.com
+# PAGE serves and not what the API does -- a fake that was wrong about reality,
+# and therefore a test that was not testing the thing.
 RENDERED_README = (
-    b'<article>\n<a href="' + RAW.encode() + b'/assets/blocked-write.svg">'
-    b'<img src="https://camo.githubusercontent.com/abc" alt="A compromised agent '
+    b'<article>\n<a href="assets/blocked-write.svg">'
+    b'<img src="assets/blocked-write.svg" alt="A compromised agent '
     b'obeys an instruction hidden in a record"></a>\n'
     b'<h1>abyss-write-gate</h1>\n<p>An agent with write access</p>\n</article>'
 )

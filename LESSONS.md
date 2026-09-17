@@ -210,3 +210,25 @@ The lesson is about ordering rather than technique. Building the verifier before
 the thing it verifies is correct gives a free negative control that costs
 nothing and expires the moment you publish. Build it after, and the first run
 you ever see is a green one, which is the one result that teaches you least.
+
+## L-010 — The fake was wrong about the thing it stood in for
+**Constraint:** RST-C10
+
+The canned response for GitHub's rendered README carried a camo-proxied image
+src, because that is what the github.com page serves. The API render — which is
+what the checker actually fetches — leaves the src **relative**. So the fake
+described a shape the real surface never produces, and every test built on it
+was green about a case that does not occur.
+
+It surfaced from a live probe against the published repository, not from the
+suite, and it surfaced alongside the larger gap it was hiding: the check
+confirmed an `<img>` tag was present above the first heading and never fetched
+the src. A tag is not a picture. A visitor whose README carries a correct tag
+pointing at a moved file sees a broken image, and every check in the file stayed
+green through that.
+
+Both halves are the same error at different distances. A fake is a claim about
+reality, and a test built on a wrong claim measures the claim rather than the
+system. The offline tests remain the better tests — deterministic, and able to
+break things the published repository must not have broken — but they needed one
+run against the real surface to find out what they were imitating.

@@ -17,6 +17,7 @@ answers a different question than the one a visitor asks.
 
 from __future__ import annotations
 
+import html as html_entities
 import json
 import re
 import subprocess
@@ -228,6 +229,24 @@ def check_artifact(fetcher: Fetcher, owner: str, name: str, branch: str, root: P
     )
 
 
+def resolve_src(src: str, owner: str, name: str, branch: str) -> str:
+    """Turn an `<img src>` from a rendered view into something fetchable.
+
+    Three forms occur in practice and they resolve against three different
+    bases. GitHub's API render leaves the src RELATIVE; the github.com page
+    rewrites it root-relative; a proxied image is absolute. Guessing one of
+    them would make this check pass by accident on the other two.
+    """
+    src = html_entities.unescape(src.strip())
+    if src.startswith(("http://", "https://")):
+        return src
+    if src.startswith("//"):
+        return f"https:{src}"
+    if src.startswith("/"):
+        return f"https://github.com{src}"
+    return raw_url(owner, name, branch, src)
+
+
 def check_above_fold(fetcher: Fetcher, owner: str, name: str, branch: str, root: Path) -> Result:
     try:
         answer = fetcher.fetch(
@@ -238,9 +257,9 @@ def check_above_fold(fetcher: Fetcher, owner: str, name: str, branch: str, root:
     early = _status_result("above_fold", answer.status, missing_means_broken=True)
     if early:
         return early
-    html = answer.body.decode("utf-8", "replace")
-    image = re.search(r"<img\b", html, re.I)
-    heading = re.search(r"<h[1-6]\b", html, re.I)
+    document = answer.body.decode("utf-8", "replace")
+    image = re.search(r"<img\b[^>]*\bsrc=[\"\']([^\"\']+)[\"\']", document, re.I)
+    heading = re.search(r"<h[1-6]\b", document, re.I)
     if not image:
         return Result("above_fold", FAIL, "the rendered README contains no image at all")
     if heading and image.start() > heading.start():
@@ -249,10 +268,38 @@ def check_above_fold(fetcher: Fetcher, owner: str, name: str, branch: str, root:
             FAIL,
             "the artifact renders BELOW the first heading in the rendered view",
         )
+
+    # An <img> tag proves a tag. Fetch the src it carries: a visitor sees a
+    # broken image whenever the tag is right and the reference is not, and
+    # every other check here stays green in exactly that case.
+    src = image.group(1)
+    target = resolve_src(src, owner, name, branch)
+    try:
+        asset = fetcher.fetch(target, accept="*/*")
+    except Unavailable as exc:
+        return Result(
+            "above_fold",
+            UNAVAILABLE,
+            f"the rendered image source could not be reached: {src} ({exc})",
+        )
+    if asset.status != 200:
+        return Result(
+            "above_fold",
+            FAIL,
+            f"the rendered image source answered {asset.status}: {src}",
+        )
+    if not asset.content_type.lower().startswith("image/"):
+        return Result(
+            "above_fold",
+            FAIL,
+            f"the rendered image source is served as {asset.content_type!r}, "
+            f"not an image: {src}",
+        )
     return Result(
         "above_fold",
         PASS,
-        "the artifact renders above the first heading in GitHub's own rendering",
+        f"renders above the first heading and its source resolves "
+        f"({asset.content_type.split(';')[0]}, {len(asset.body)} bytes)",
     )
 
 
