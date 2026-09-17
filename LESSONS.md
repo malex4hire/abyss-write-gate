@@ -1,0 +1,38 @@
+# Lessons
+
+Written as the work happened. Each entry records something that was wrong
+first, because an entry that only records what worked teaches the next reader
+nothing.
+
+---
+
+## L-001 — `sys._getframe(1)` inside a helper names the helper's caller, not the guard's
+**Constraint:** RST-C1
+
+The module guard in `store.py` called `_caller_module(1)` from inside
+`action_context`. Depth 1 from inside the helper is `action_context`'s own frame,
+so the guard read `gate.store` as the caller and refused the action layer — every
+write, including legitimate ones.
+
+What makes it worth recording is how it surfaced: not from reading the code, but
+because a direct invocation failed with the guard's own message naming
+`gate.store`. A frame-depth error is invisible to inspection and obvious to
+execution. Correct depth is 2, and there is now a test that a legitimate action
+writes, which is the half that would otherwise be missing — the bypass tests
+alone were all still green with the boundary refusing everything.
+
+## L-002 — A two-minute test suite was an fsync problem, not a design problem
+**Constraint:** RST-C7
+
+The first full run of the RST-C1 suite did not finish inside two minutes.
+Bisecting by test name showed the cost was in the fixture: 10–13 seconds per
+seeded world, on a suite where nearly every test builds one.
+
+The instinct was to share a world across tests. That would have coupled the
+tests to each other, in a repository whose subject is isolation. Measuring first
+gave the real cause — SQLite in autocommit mode fsyncs per statement — and the
+fix is two pragmas and a transaction around the seed. 0.08s, and every test
+still gets its own database.
+
+The general form: a slow suite is a measurement before it is a design
+conclusion.
