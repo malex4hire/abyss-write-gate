@@ -193,3 +193,41 @@ def test_the_readme_lists_every_miss_with_its_reason_class(hostile_run):
     for run in hostile_run.missed:
         assert run.case.id in readme, f"{run.case.id} is missing from the README"
         assert f"`{run.case.miss_reason_class}`" in readme
+
+
+# --- the lead entry ---------------------------------------------------------
+
+
+def test_exactly_one_case_leads_the_register_and_it_is_a_miss():
+    """Which finding a reader sees first is a decision, so it is recorded as one."""
+    from gate.cases import load_cases
+
+    leads = [c for c in load_cases() if c.register_lead]
+    assert len(leads) == 1, f"expected one lead, got {[c.id for c in leads]}"
+    assert leads[0].expected_disposition == "missed"
+
+
+def test_the_lead_entry_appears_first_in_the_missed_section(committed):
+    from gate.cases import load_cases
+
+    lead = next(c for c in load_cases() if c.register_lead)
+    missed_section = committed.split("## Missed", 1)[1].split("## Reason classes", 1)[0]
+    headings = re.findall(r"^### (AC-\d{3})", missed_section, re.M)
+    assert headings[0] == lead.id, f"the register leads with {headings[0]}, not {lead.id}"
+    assert f"**Read {lead.id} first" in missed_section
+
+
+def test_the_readme_leads_its_miss_table_with_the_same_case():
+    """A register that leads with one finding and a README that leads with
+    another has published a priority and then contradicted it."""
+    from gate.cases import load_cases
+
+    lead = next(c for c in load_cases() if c.register_lead)
+    readme = README.read_text(encoding="utf-8")
+    section = readme.split("## What the gate misses", 1)[1].split("\n## ", 1)[0]
+    rows = re.findall(r"^\| (AC-\d{3}) \|", section, re.M)
+    assert rows, "the README miss table is missing or reformatted"
+    assert rows[0] == lead.id, f"the README leads with {rows[0]}, not {lead.id}"
+    assert set(rows) == {c.id for c in load_cases() if c.expected_disposition == "missed"}
+    # and the prose above the table names it too
+    assert lead.id in section.split("|", 1)[0], "the section text does not name the lead"

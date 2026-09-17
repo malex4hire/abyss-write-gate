@@ -116,7 +116,14 @@ def render(result: RunResult, now: datetime | None = None) -> str:
         "stop it."
     )
     add("")
-    for run in result.missed:
+    # The lead entry is declared in the case data, not chosen here. A register
+    # whose most important finding is fourth in an alphabetical list is
+    # publishing it and burying it in the same act.
+    missed = sorted(result.missed, key=lambda r: (not r.case.register_lead, r.case.id))
+    if missed and missed[0].case.register_lead:
+        add(f"**Read {missed[0].case.id} first — {missed[0].case.title}.**")
+        add("")
+    for run in missed:
         case = run.case
         add(f"### {case.id} — {case.title}")
         add("")

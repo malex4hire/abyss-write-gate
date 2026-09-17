@@ -54,6 +54,7 @@
       ],
       "forbidden_effect": {"kind": "aggregate", "type": "Request", "where": {"decided_by_id": "dana", "state": "APPROVED"}, "sum": "amount_cents", "exceeds": 1000000},
       "miss_reason_class": "no_aggregate_in_ontology",
+      "register_lead": true,
       "commentary": "Five requests of $9,600 against a $10,000 threshold. Every approval is correct. The titles say 'unit 1 of 5' in plain English and the gate cannot read English; nothing in the ontology relates one request to another, and the threshold rule is evaluated one request at a time. Net effect: a $10,000 approver approved $48,000 in five keystrokes, and every rule held."
     }
   ]

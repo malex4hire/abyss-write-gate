@@ -84,6 +84,7 @@ class Case:
     forbidden_effect: Mapping[str, Any]
     commentary: str
     miss_reason_class: str | None = None
+    register_lead: bool = False
     source_file: str = ""
 
     def as_dict(self) -> dict[str, Any]:
@@ -96,6 +97,7 @@ class Case:
             "expected_disposition": self.expected_disposition,
             "expected_rejections": list(self.expected_rejections),
             "miss_reason_class": self.miss_reason_class,
+            "register_lead": self.register_lead,
             "commentary": self.commentary,
             "source_file": self.source_file,
         }
@@ -202,9 +204,21 @@ def load_cases(case_dir: Path | str | None = None) -> list[Case]:
                     forbidden_effect=raw["forbidden_effect"],
                     commentary=raw["commentary"],
                     miss_reason_class=raw.get("miss_reason_class"),
+                    register_lead=bool(raw.get("register_lead", False)),
                     source_file=path.name,
                 )
             )
+    leads = [c for c in cases if c.register_lead]
+    if len(leads) > 1:
+        raise CaseValidationError(
+            "more than one case declares register_lead: "
+            f"{sorted(c.id for c in leads)}"
+        )
+    if leads and leads[0].expected_disposition != MISSED:
+        raise CaseValidationError(
+            f"{leads[0].id} leads the register but is not a miss; the lead is "
+            "the blind spot a reader should see first"
+        )
     return sorted(cases, key=lambda c: c.id)
 
 

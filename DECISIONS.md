@@ -368,3 +368,19 @@ where it is made.
 The file also guards its own mechanism: if `_remove_the_gate` stopped removing
 the gate, every case would still be refused and the whole constraint would pass
 by refusing everything. That is asserted separately.
+
+## DR-028 — Which finding leads the register is declared in the data
+**Time:** 2026-09-17T14:46:00-04:00
+**Constraint:** RST-C5
+**Decision:** A case may carry `register_lead`. At most one may, it must be a
+miss, and the register renders it first in the Missed section under an explicit
+pointer. The README's miss table is asserted to lead with the same case.
+**Rationale:** The misses were rendered in identifier order, which put the most
+important finding in this repository third. A register that publishes its
+strongest blind spot and buries it in an alphabetical list has done both things
+at once. Making it a declared field rather than a sort heuristic keeps the
+choice legible and reviewable — the author decides which finding a reader meets
+first, and the decision is in the data where it can be argued with. The
+alternative, ranking by how many actions landed, would have put AC-603 first by
+coincidence this time and silently reordered the register the next time a case
+was added.
