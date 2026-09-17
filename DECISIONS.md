@@ -182,3 +182,41 @@ credulity makes the driver a stronger adversary than the thing it replaces, and
 it makes every result in this repository reproducible by anyone with a clone and
 no credential. The cost is that the injection format is synthetic — a marker and
 a JSON payload — which is stated in the module rather than hidden.
+
+## DR-015 — The register embeds its own counts, machine-readable
+**Time:** 2026-09-17T11:34:00-04:00
+**Constraint:** RST-C5
+**Decision:** `RunResult.counts()` computes every published number exactly once.
+The register renders them into prose and into a fenced JSON block, and a test
+parses the block and compares it to the run.
+**Rationale:** RST-C5 requires that every count in the document match the count
+computed from the run. Asserting that against prose means parsing English. A
+machine-readable block makes the assertion exact, and rendering both from one
+dictionary means the prose and the block cannot drift — there is no second place
+where a number is decided. The counts are also mutated: dropping a case from the
+run must move them, which is what distinguishes a derived number from a typed
+one.
+
+## DR-016 — The README artifact carries no volatile field at all
+**Time:** 2026-09-17T11:40:00-04:00
+**Constraint:** RST-C6
+**Decision:** The SVG contains no timestamp, no duration, no path and no port.
+Regeneration is asserted by byte equality, and a second test asserts the
+volatile normaliser changes nothing in it.
+**Rationale:** The allowlist permits volatile fields; producing none is
+strictly stronger, and it removes the way this assertion usually rots — an
+equivalence check whose normaliser quietly grows until it is comparing almost
+nothing. The paired test is the guard: byte equality is only meaningful once you
+have shown that nothing volatile was excluded from the comparison.
+
+## DR-017 — The artifact selects its case from the data
+**Time:** 2026-09-17T11:44:00-04:00
+**Constraint:** RST-C6
+**Decision:** The renderer takes the first gated case of a named class rather
+than a named case identifier. Every value on the panel — amount, threshold,
+rejection code, message, state afterwards — is read out of the run it performs.
+**Rationale:** The test forbidding any module from hardcoding a case identifier
+caught the first version, which named `AC-101`. The exemption was available and
+would have been reasonable-sounding. Selecting from the data instead makes the
+picture a view onto the case set rather than a second story about it, and means
+the panel cannot show something the suite is not also asserting.

@@ -1,0 +1,6 @@
+# The run directory. Every artifact a reader needs is committed; this is the
+# working output, rebuilt by `make demo`.
+out/
+__pycache__/
+*.pyc
+.pytest_cache/
