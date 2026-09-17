@@ -127,8 +127,8 @@ Stated here rather than left for a reader to find:
 
 ## Constraints
 
-The work is built to eight numbered constraints, and every commit names the ones
+The work is built to nine numbered constraints, and every commit names the ones
 it satisfies. Each has a test file: `tests/test_rst_c1_write_boundary.py`
-through `tests/test_rst_c8_build_log.py`. A deterministic gate has two outcomes,
+through `tests/test_rst_c9_no_vacuous_case.py`. A deterministic gate has two outcomes,
 verified or fail — no threshold here is adjusted to make a case pass, and a case
 the gate misses is registered rather than deleted from the set.

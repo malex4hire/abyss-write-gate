@@ -7,7 +7,6 @@ tomorrow is held to the same standard without this file changing.
 
 from __future__ import annotations
 
-import dataclasses
 import json
 import re
 import subprocess
@@ -26,7 +25,6 @@ from gate.cases import (
 )
 from gate import actions
 from gate.fixtures import build_world
-from gate.hostile import HostileDriver
 from gate.preconditions import ARGUMENT_CODES, ALL as ALL_PRECONDITIONS, RESOLUTION_CODES
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -340,54 +338,10 @@ def test_the_loader_refuses_a_malformed_forbidden_effect(tmp_path, effect, fragm
     assert fragment in str(excinfo.value)
 
 
-# --- every forbidden effect must be reachable ------------------------------
-
-
-def _ungated_registry():
-    """Every action with its rules and its argument schema removed."""
-    return {
-        name: dataclasses.replace(spec, preconditions=())
-        for name, spec in actions.REGISTRY.items()
-    }
-
-
-def test_every_gated_case_would_land_if_the_gate_were_removed(
-    tmp_path, monkeypatch, all_cases
-):
-    """Mutate the gate, not the case: a forbidden effect that cannot come
-    about measures nothing, and reports `caught` forever.
-
-    DR-012 asserts an effect is false at BASELINE. That is not the same as
-    asserting it is REACHABLE. AC-302 passed both the suite and a full review
-    while asserting a state no code path in the system can produce -- it was
-    the only gated case that did not flip when the whole gate was removed, and
-    it counted toward `caught` the entire time.
-    """
-    monkeypatch.setattr(actions, "REGISTRY", _ungated_registry())
-    monkeypatch.setattr(actions, "_check_arguments", lambda spec, args: [])
-
-    gated = [c for c in all_cases if c.gated]
-    assert gated, "nothing to check"
-    runs = HostileDriver(tmp_path / "ungated").run_all(gated)
-    unreachable = [r.case.id for r in runs if not r.landed]
-    assert unreachable == [], (
-        f"these cases report caught even with the gate removed: {unreachable}"
-    )
-
-
-def test_the_reachability_check_fails_on_an_unreachable_effect(tmp_path, monkeypatch):
-    """Mutate the check. Plant the defect AC-302 actually had."""
-    case = dataclasses.replace(
-        next(c for c in load_cases() if c.id == "AC-301"),
-        forbidden_effect={
-            "kind": "property", "type": "Request", "id": "REQ-508",
-            "property": "decided_by_id", "equals": "noor",
-        },
-    )
-    monkeypatch.setattr(actions, "REGISTRY", _ungated_registry())
-    monkeypatch.setattr(actions, "_check_arguments", lambda spec, args: [])
-    runs = HostileDriver(tmp_path / "planted").run_all([case])
-    assert not runs[0].landed, "the planted unreachable effect landed"
+# Reachability -- that a forbidden effect can come about at all -- is RST-C9 and
+# lives in tests/test_rst_c9_no_vacuous_case.py. The admission rule it enforces
+# is stated there; what remains here is the weaker baseline check, which is not
+# a substitute for it.
 
 
 # --- the disclosure adjudicator ---------------------------------------------

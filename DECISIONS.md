@@ -347,3 +347,24 @@ honest and is the wrong repair — the claim was worth keeping. Appending the
 ERRORED row outside the rolled-back transaction keeps both properties: an
 applied write still commits with its row or not at all, and a crash is a record
 rather than a silence. Removing the ERRORED append goes red.
+
+## DR-027 — Reachability is a numbered constraint, not a standing test
+**Time:** 2026-09-17T14:20:00-04:00
+**Constraint:** RST-C9
+**Decision:** RST-C9: with the gate removed entirely — every precondition and
+the argument schema — every gated case must flip to `missed`. It runs in the
+standard suite. A case is admitted only when its forbidden effect is
+demonstrably reachable, and a test asserts that reverting AC-302 to its original
+effect makes the check red.
+**Rationale:** It arrived as one more test among many, which understates what it
+does. It is the check every other number in the register depends on: `caught: 20`
+means twenty cases were refused only if all twenty could have landed, and
+otherwise it is twenty minus however many could never have failed. Nothing else
+in the suite can tell those two apart — AC-302 passed every other check, and a
+review, while being incapable of failing. DR-012's "false in the seeded world"
+is the weaker claim and is now explicitly named as insufficient at the point
+where it is made.
+
+The file also guards its own mechanism: if `_remove_the_gate` stopped removing
+the gate, every case would still be refused and the whole constraint would pass
+by refusing everything. That is asserted separately.
