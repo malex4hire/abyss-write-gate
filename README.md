@@ -45,11 +45,15 @@ git clone https://github.com/malex4hire/abyss-write-gate && cd abyss-write-gate
 make demo
 ```
 
-Standard library only. No credential is read, no network call is made, no model
-is contacted. The hostile driver is deterministic, which is why a clean clone
-reproduces every number in the published register — including the misses.
+`make demo` is standard library only. No credential is read, no network call is
+made, no model is contacted. The hostile driver is deterministic, which is why a
+clean clone reproduces every number in the published register — including the
+misses.
 
-`make test` runs the constraint suite. `make verify` runs both.
+`make test` runs the constraint suite and is the one thing here that wants a
+dependency: `pytest`. It is a development tool and the published run does not go
+through it, which is why it is not declared as a requirement — installing it
+would put a step between the clone and the command. `make verify` runs both.
 
 ## What the gate misses
 
