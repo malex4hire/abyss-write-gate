@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pytest
 
-from gate import cases as case_module
 from gate.cases import (
     CASE_DIR,
     CaseValidationError,

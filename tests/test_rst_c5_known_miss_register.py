@@ -158,3 +158,38 @@ def test_the_register_names_the_command_that_regenerates_it(committed):
 def test_the_register_contains_no_credential_shaped_string(committed):
     for pattern in (r"sk-[A-Za-z0-9]{8,}", r"AKIA[0-9A-Z]{16}", r"ghp_[A-Za-z0-9]{20,}"):
         assert not re.search(pattern, committed)
+
+
+# --- the README quotes the same numbers -------------------------------------
+
+README = ROOT / "README.md"
+HEADLINE = re.compile(
+    r"\*\*(\d+) cases · (\d+) classes · (\d+) caught · (\d+) missed "
+    r"· (\d+) forbidden mutations landed\.\*\*"
+)
+
+
+def test_the_readme_headline_matches_the_run():
+    """The one place a count is typed by hand, and it is asserted.
+
+    A number in prose drifts the moment the set grows. This is the guard, and
+    the format is fixed so the guard can parse it rather than guess.
+    """
+    match = HEADLINE.search(README.read_text(encoding="utf-8"))
+    assert match, "the README headline counts are missing or reformatted"
+    cases, classes, caught, missed, landed = (int(g) for g in match.groups())
+    counts = parse_counts(COMMITTED.read_text(encoding="utf-8"))
+    assert (cases, classes, caught, missed, landed) == (
+        counts["cases"],
+        counts["classes"],
+        counts["caught"],
+        counts["missed"],
+        counts["forbidden_mutations_landed"],
+    )
+
+
+def test_the_readme_lists_every_miss_with_its_reason_class(hostile_run):
+    readme = README.read_text(encoding="utf-8")
+    for run in hostile_run.missed:
+        assert run.case.id in readme, f"{run.case.id} is missing from the README"
+        assert f"`{run.case.miss_reason_class}`" in readme

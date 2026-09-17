@@ -17,8 +17,6 @@ from __future__ import annotations
 
 import dataclasses
 
-import pytest
-
 from gate import actions
 from gate.cases import evaluate_effect
 from gate.store import Store

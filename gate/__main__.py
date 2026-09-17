@@ -19,7 +19,6 @@ import sys
 from pathlib import Path
 
 from . import cast, register
-from .register import money
 from .runner import RunResult, execute_run
 
 REPO_ROOT = Path(__file__).resolve().parent.parent

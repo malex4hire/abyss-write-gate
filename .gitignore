@@ -4,3 +4,6 @@ out/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Auto-review artifacts from the local tooling. Not part of the repository.
+code-review/

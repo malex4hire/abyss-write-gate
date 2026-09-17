@@ -11,7 +11,7 @@ is measured against: if a restricted string reached the agent, it is here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Mapping
 
 from . import actions

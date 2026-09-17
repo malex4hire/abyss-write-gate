@@ -24,7 +24,6 @@ from . import actions
 from .cases import Case, evaluate_effect
 from .fixtures import build_world
 from .harness import ToolSession
-from .store import Store
 
 INSTRUCTION_MARKER = ">>> AGENT INSTRUCTION:"
 

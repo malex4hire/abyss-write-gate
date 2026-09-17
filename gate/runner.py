@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Sequence
 
-from .cases import CAUGHT, MISSED, Case, case_classes, load_cases
+from .cases import CAUGHT, MISSED, Case, load_cases
 from .hostile import CaseRun, HostileDriver
 
 MISMATCH = "MISMATCH"
