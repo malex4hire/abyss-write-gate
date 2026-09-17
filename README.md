@@ -171,8 +171,13 @@ Stated here rather than left for a reader to find:
 
 ## Constraints
 
-The work is built to nine numbered constraints, and every commit names the ones
-it satisfies. Each has a test file: `tests/test_rst_c1_write_boundary.py`
-through `tests/test_rst_c9_no_vacuous_case.py`. A deterministic gate has two outcomes,
+The work is built to twelve numbered constraints, and every commit names the
+ones it satisfies. Each has a test file: `tests/test_rst_c1_write_boundary.py`
+through `tests/test_rst_c12_repeatable_verification.py`. The last three are
+about the published surface rather than the gate: `make verify-public` fetches
+this repository as an unauthenticated visitor sees it and checks that the
+artifact above renders, every link resolves, and the register is readable in
+the rendered view. It reports three outcomes, not two — a check that could not
+reach the network says so, and unknown is never a pass. A deterministic gate has two outcomes,
 verified or fail — no threshold here is adjusted to make a case pass, and a case
 the gate misses is registered rather than deleted from the set.

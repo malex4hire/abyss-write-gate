@@ -384,3 +384,53 @@ first, and the decision is in the data where it can be argued with. The
 alternative, ranking by how many actions landed, would have put AC-603 first by
 coincidence this time and silently reordered the register the next time a case
 was added.
+
+## DR-029 — The transport is injected so the failure modes are testable offline
+**Time:** 2026-09-17T15:12:00-04:00
+**Constraint:** RST-C10
+**Decision:** Every check takes a fetcher. The suite injects canned responses;
+`make verify-public` injects `UrllibFetcher`. Each check is exercised twice — a
+correct surface and a deliberately broken one.
+**Rationale:** "Point it at something broken and require it to notice" must not
+mean breaking the published repository to find out. Separating the fetching from
+the deciding makes a missing artifact, a stale asset that still answers 200, an
+image rendered below the first heading, a 404 link and an unreachable host all
+ordinary unit tests. It also keeps the suite hermetic: `make test` does not
+depend on a network for its verdicts.
+
+## DR-030 — Three outcomes, because unknown is not a pass
+**Time:** 2026-09-17T15:18:00-04:00
+**Constraint:** RST-C11
+**Decision:** `PASS`, `FAIL` and `UNAVAILABLE`. The first two are claims about
+the repository; the third is a claim about the evidence. All of `UNAVAILABLE`
+exits non-zero and is reported in its own sentence.
+**Rationale:** The failure this is written against is an unreachable API reading
+as a successful publication. A 403 rate-limit says nothing about visibility, and
+reporting it as "not public" invents a finding out of missing evidence — the
+mirror of the same error. A 404 to an anonymous query IS a finding, because
+that is exactly what a private repository looks like to a visitor. The
+distinction is asserted: a broken surface and an unreachable one produce
+different statuses and different text.
+
+## DR-031 — The slug is derived from the git remote
+**Time:** 2026-09-17T15:24:00-04:00
+**Constraint:** RST-C12
+**Decision:** `repo_slug` parses `git remote get-url origin`; the branch comes
+from `rev-parse --abbrev-ref HEAD`. The entry point takes no arguments.
+**Rationale:** A constant naming the owner and repository would be a second copy
+of a fact that already exists, and second copies drift — this one would drift
+silently, because a checker pointed at the wrong repository still reports five
+green checks. Deriving it also makes the command re-runnable from a fork or a
+rename without editing anything.
+
+## DR-032 — The surface checker lives outside the gate package
+**Time:** 2026-09-17T15:30:00-04:00
+**Constraint:** RST-C12
+**Decision:** `publish/`, not `gate/`. A test asserts no module in `gate/`
+imports it.
+**Rationale:** RST-C7 asserts that nothing on the default path imports a network
+library, and `make demo` opening a socket would make the published register
+depend on the weather. The checker opens sockets by definition. Putting it in
+`gate/` would have forced a weakening of the RST-C7 scan — which is the shape of
+every bypass this repository argues against, arriving as a reasonable
+convenience.

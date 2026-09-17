@@ -186,3 +186,27 @@ class of thing. The only way to tell is to break the subject and require the
 result to change, and for a whole suite that means breaking all of it at once
 rather than one guard at a time.
 
+
+## L-009 — The negative control was free, and it was the private repository
+**Constraint:** RST-C10
+
+The surface checks were built while the repository was still private, which
+meant the first live run had a guaranteed correct answer: every check must fail,
+because anonymously a private repository is a 404.
+
+It did. All five failed, against real HTTP responses from GitHub rather than a
+fake — visibility, artifact, above-fold, links and register, each with the
+status it should have. Five minutes later the repository was public and the same
+command returned five passes with nothing changed but the visibility flag.
+
+The canned-response tests already covered the failure modes, and they are the
+better test because they are deterministic and offline. But they are canned, and
+a fake fetcher proves the checks respond to the fake fetcher. One run against a
+real surface with a known-wrong answer proves the wiring — the URLs, the
+headers, the status handling, the transport — and that half is exactly what a
+fake cannot reach.
+
+The lesson is about ordering rather than technique. Building the verifier before
+the thing it verifies is correct gives a free negative control that costs
+nothing and expires the moment you publish. Build it after, and the first run
+you ever see is a green one, which is the one result that teaches you least.

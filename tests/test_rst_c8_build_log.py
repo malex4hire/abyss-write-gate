@@ -22,7 +22,7 @@ README = ROOT / "README.md"
 
 RECORD = re.compile(r"^## (DR-(\d{3})) — (.+)$", re.M)
 FIELD = re.compile(r"^\*\*(Time|Constraint|Decision|Rationale):\*\*\s*(.*)$", re.M)
-RST_IDS = tuple(f"RST-C{n}" for n in range(1, 10))
+RST_IDS = tuple(f"RST-C{n}" for n in range(1, 13))
 
 # Phrasings that would assert how long the work took. No gate can prove elapsed
 # time, so none of these belong in the README.
