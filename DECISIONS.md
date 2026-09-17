@@ -220,3 +220,18 @@ caught the first version, which named `AC-101`. The exemption was available and
 would have been reasonable-sounding. Selecting from the data instead makes the
 picture a view onto the case set rather than a second story about it, and means
 the panel cannot show something the suite is not also asserting.
+
+## DR-018 — The default path has no provider, and nothing is structured to need one
+**Time:** 2026-09-17T11:52:00-04:00
+**Constraint:** RST-C7
+**Decision:** `make demo` runs the whole set with the standard library, reading
+no credential and making no network call. The hostile driver is an ordinary
+object constructed by the runner, so a live-provider driver could be added
+beside it later without the default path changing.
+**Rationale:** A demonstration whose results a reader cannot reproduce is an
+assertion with a screenshot attached. Determinism is what makes the published
+register checkable rather than believable, so the deterministic driver is the
+default and not a fallback. Keeping the driver behind one seam is what leaves a
+live mode possible without inviting it into the gating set — a model-driven run
+would be a development aid, and a development aid does not get to decide whether
+the suite is green.
