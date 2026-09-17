@@ -602,3 +602,21 @@ one.
 Measured in a temporary repository: two files, one carrying a planted dash.
 Readable, the scan returns one hit. With that file at mode 000 the scan raises
 and names it; under the previous code it returned no hits and passed.
+
+## DR-040: The publish entry point parses its arguments
+**Time:** 2026-09-17T17:56:00-04:00
+**Constraint:** RST-C12
+**Decision:** `python -m publish` parses `argv` with `argparse` and refuses
+anything it does not declare, which is everything: the command takes no
+arguments. `--help` still exits 0 without running the checks.
+**Rationale:** Arrived by hand from a parallel lane as a class to probe, and it
+was present here. `main` accepted `argv` and never looked at it, so `--checkk`,
+`-c` and `--help` all fell through to the default path and exited 0. The
+default path here only reads, so the cost was a wrong green rather than a wrong
+write. That is the accident of this command rather than a property of the
+shape, and the shape is what was wrong.
+
+The regeneration entry point was probed in the same sweep and was already
+sound: `python -m gate` has used `argparse` since it was written, and a
+near-miss flag exits non-zero. That is now asserted by execution rather than by
+reading, with a control that the right arguments do write.

@@ -150,3 +150,47 @@ def test_the_verifier_is_not_on_the_gate_default_path():
         text = path.read_text(encoding="utf-8")
         assert "publish" not in text or "publish" not in text.split("\n")[0], path.name
         assert not re.search(r"^\s*(?:import|from)\s+publish\b", text, re.M), path.name
+
+
+# --- arguments are parsed, not pattern-matched ------------------------------
+
+
+@pytest.mark.parametrize("flag", ["--checkk", "-c", "--check", "--dry-run", "extra"])
+def test_a_near_miss_argument_is_refused(flag, tmp_path, artifact_bytes, capsys):
+    """A typo must not fall through to the default path and exit 0."""
+    code = main([flag], fetcher=healthy(artifact_bytes), root=ROOT)
+    out = capsys.readouterr().out
+    assert code != 0, f"{flag} was accepted"
+    for name in CHECK_NAMES:
+        assert name not in out, f"{flag} ran the checks anyway"
+
+
+def test_help_is_not_a_near_miss(artifact_bytes, capsys):
+    """`--help` is a request, not a typo: it exits 0 and runs nothing."""
+    code = main(["--help"], fetcher=healthy(artifact_bytes), root=ROOT)
+    out = capsys.readouterr().out
+    assert code == 0
+    for name in CHECK_NAMES:
+        assert name not in out
+
+
+def test_the_control_still_runs_with_no_arguments(artifact_bytes, capsys):
+    code = main([], fetcher=healthy(artifact_bytes), root=ROOT)
+    out = capsys.readouterr().out
+    assert code == 0
+    assert all(name in out for name in CHECK_NAMES)
+
+
+def test_a_near_miss_argument_is_refused_by_the_process(tmp_path):
+    result = subprocess.run(
+        [sys.executable, "-m", "publish", "--checkk"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env=_scrubbed_env(tmp_path / "home"),
+        timeout=60,
+    )
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    for name in CHECK_NAMES:
+        assert name not in result.stdout

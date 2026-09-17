@@ -181,3 +181,42 @@ def test_the_repository_declares_no_runtime_dependency():
     """Standard library only on the default path."""
     for name in ("requirements.txt", "setup.py", "Pipfile", "poetry.lock"):
         assert not (ROOT / name).exists(), f"{name} would put a step before `make demo`"
+
+
+# --- the entry point that WRITES refuses a near-miss argument ---------------
+
+
+@pytest.mark.parametrize("flag", ["--checkk", "-c", "--regenerate", "extra"])
+def test_a_near_miss_argument_writes_nothing(flag, tmp_path):
+    """`python -m gate` regenerates the register and the artifact. A typo
+    reaching the default path would take the write path silently."""
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "gate", flag,
+         "--artifacts-root", str(artifacts), "--run-dir", str(tmp_path / "run")],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env=_scrubbed_env(tmp_path / "home"),
+        timeout=120,
+    )
+    assert result.returncode != 0, f"{flag} was accepted"
+    assert list(artifacts.rglob("*")) == [], f"{flag} wrote something"
+
+
+def test_the_control_writes_when_the_arguments_are_right(tmp_path):
+    """A check that can only go red is indistinguishable from a broken one."""
+    artifacts = tmp_path / "artifacts"
+    result = subprocess.run(
+        [sys.executable, "-m", "gate",
+         "--artifacts-root", str(artifacts), "--run-dir", str(tmp_path / "run")],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env=_scrubbed_env(tmp_path / "home"),
+        timeout=180,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (artifacts / "docs" / "KNOWN-MISSES.md").exists()
+    assert (artifacts / "assets" / "blocked-write.svg").exists()
