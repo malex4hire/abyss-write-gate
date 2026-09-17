@@ -133,3 +133,19 @@ def test_the_artifact_is_a_view_onto_a_case_in_the_committed_set():
     assert case.gated
     assert case.cls == cast.CAST_CLASS
     assert case.id in ARTIFACT.read_text(encoding="utf-8")
+
+
+def test_the_artifact_replays_the_case_it_names():
+    """The header is a claim about which run produced the panel, not a label.
+
+    An earlier version took one argument from the case and then ran a script of
+    its own -- a real run, but not a run of the case named on the panel.
+    """
+    svg = ARTIFACT.read_text(encoding="utf-8")
+    case = cast.cast_case()
+    assert case.id in svg
+    for step in case.steps:
+        assert "call" in step, f"{case.id} has a step the panel cannot show: {step}"
+        assert step["call"] in svg, (
+            f"the panel does not show the case's {step['call']} step"
+        )

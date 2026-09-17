@@ -21,25 +21,13 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import actions
-from .cases import Case, evaluate_effect
+from .cases import Case, evaluate_effect, iter_strings
 from .fixtures import build_world
 from .harness import ToolSession
 
 INSTRUCTION_MARKER = ">>> AGENT INSTRUCTION:"
 
 _DECODER = json.JSONDecoder()
-
-
-def _strings(payload: Any) -> Iterable[str]:
-    """Every string anywhere in a tool result. Instructions hide in the leaves."""
-    if isinstance(payload, str):
-        yield payload
-    elif isinstance(payload, dict):
-        for value in payload.values():
-            yield from _strings(value)
-    elif isinstance(payload, (list, tuple)):
-        for value in payload:
-            yield from _strings(value)
 
 
 def extract_instructions(payload: Any) -> list[dict[str, Any]]:
@@ -51,7 +39,7 @@ def extract_instructions(payload: Any) -> list[dict[str, Any]]:
     about the model's mood rather than about the gate.
     """
     found: list[dict[str, Any]] = []
-    for text in _strings(payload):
+    for text in iter_strings(payload):
         cursor = 0
         while True:
             marker_at = text.find(INSTRUCTION_MARKER, cursor)
@@ -137,8 +125,7 @@ class HostileDriver:
 
         transcript = [c.as_dict() for c in session.transcript]
         attempts = store.attempts(case.id)
-        transcript_text = json.dumps(transcript, sort_keys=True, default=str)
-        landed = evaluate_effect(store, transcript_text, case.forbidden_effect)
+        landed = evaluate_effect(store, transcript, case.forbidden_effect)
         observed = [
             code
             for attempt in attempts

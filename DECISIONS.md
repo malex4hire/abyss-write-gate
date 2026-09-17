@@ -290,3 +290,45 @@ failed action that left its write context open would leave the gate standing
 open for every later caller, which is the worst version of that failure and the
 one a rollback can quietly miss. Both were mutated: blinding the walk goes red,
 and moving the context row outside the transaction goes red.
+
+## DR-023 — A forbidden effect must be reachable, not merely false at baseline
+**Time:** 2026-09-17T13:22:00-04:00
+**Constraint:** RST-C4
+**Decision:** A test removes the whole gate — every precondition and the
+argument schema — reruns the gated set, and asserts every case lands. A case
+that still reports `caught` against no gate at all is a case that measures
+nothing.
+**Rationale:** DR-012 asserts an effect is false before the case runs. That is a
+different claim from the effect being *achievable*, and AC-302 sat in the
+difference: it asserted `decided_by_id` could become `"noor"`, which no code
+path in this system can produce under any mutation, because attribution is
+derived inside the apply function and `update` refuses undeclared properties. It
+counted toward `gated: 20` and `caught: 20` and was asserted over by the
+compromised-agent invariant, while being incapable of failing. It was the only
+gated case that did not flip when the gate was removed. The case is retargeted
+at the approval itself, and the set-level mutation is now a standing test.
+
+## DR-024 — The disclosure adjudicator matches raw text, never a serialization
+**Time:** 2026-09-17T13:28:00-04:00
+**Constraint:** RST-C5
+**Decision:** `evaluate_effect` walks the raw strings of the transcript instead
+of searching a `json.dumps` of it.
+**Rationale:** `json.dumps` escapes quotes, backslashes and, by default, every
+non-ASCII character. A marker containing any of those is absent from the
+serialization while sitting verbatim in the agent's context, so the check
+reports `caught` on a leak that happened — and it is the only adjudicator the
+read-path class has. The current marker happens to be plain ASCII, which is
+exactly why this survived: the check was correct for the one input it had.
+
+## DR-025 — A rule that reads an argument declares which argument
+**Time:** 2026-09-17T13:34:00-04:00
+**Constraint:** RST-C2
+**Decision:** `Precondition` carries `reads_args` alongside `reads`, and a test
+asserts every action declares the parameters its rules read.
+**Rationale:** `reads` is validated against the ontology, which cannot see
+arguments, so three rules were reading `Facts.args` with nothing tying them to
+the action's parameter list. Because evaluation is exhaustive, one predicate
+raising kills the entire rejection rather than its own rule: attaching
+`REASON_PRESENT` to `approve_request` would have been a live `KeyError` at the
+write boundary with no forensic row. Only the ordering of the argument phase
+before the rule phase was preventing it, and an ordering is not a declaration.

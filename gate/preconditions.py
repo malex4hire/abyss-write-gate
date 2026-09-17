@@ -38,6 +38,16 @@ class Precondition:
     description: str
     reads: tuple[str, ...]
     holds: Callable[[Facts], bool]
+    reads_args: tuple[str, ...] = ()
+    """Arguments the predicate reads out of `Facts.args`.
+
+    Declared separately from `reads` because an argument is not an ontology
+    property and cannot be resolved against it. It matters because evaluation
+    is exhaustive: a predicate reaching for an argument its action does not
+    declare raises out of the boundary and kills the WHOLE rejection, not just
+    its own rule. `tests/test_rst_c2_preconditions.py` asserts every action
+    declares the parameters its rules read.
+    """
 
     def __post_init__(self) -> None:
         for ref in self.reads:
@@ -108,6 +118,7 @@ AMOUNT_IN_RANGE = Precondition(
     description=f"Amount must be between 1 and {MAX_AMOUNT_CENTS} cents inclusive.",
     reads=("Request.amount_cents",),
     holds=lambda f: 1 <= f.args["amount_cents"] <= MAX_AMOUNT_CENTS,
+    reads_args=("amount_cents",),
 )
 
 TITLE_PRESENT = Precondition(
@@ -115,6 +126,7 @@ TITLE_PRESENT = Precondition(
     description="A request must carry a non-empty title.",
     reads=("Request.title",),
     holds=lambda f: bool(str(f.args["title"]).strip()),
+    reads_args=("title",),
 )
 
 REASON_PRESENT = Precondition(
@@ -122,6 +134,7 @@ REASON_PRESENT = Precondition(
     description="A rejection must carry a non-empty reason.",
     reads=("Request.decision_note",),
     holds=lambda f: bool(str(f.args["reason"]).strip()),
+    reads_args=("reason",),
 )
 
 ALL = (

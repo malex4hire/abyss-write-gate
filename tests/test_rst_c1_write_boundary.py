@@ -270,3 +270,14 @@ def test_a_landed_write_with_no_forensic_record_is_not_reachable(store, monkeypa
             "UPDATE requests SET state = 'APPROVED' WHERE request_id = 'REQ-501'"
         )
     assert "WRITE_OUTSIDE_ACTION" in str(excinfo.value)
+
+
+def test_an_update_that_changes_nothing_is_refused_by_the_write_interface(store):
+    """`UPDATE t SET  WHERE ...` is a syntax error, and a caller told that
+    learns nothing about what it did wrong."""
+    from gate.store import ActionContext
+
+    with ActionContext(store, "test_empty", "dana", "tok-empty") as ctx:
+        with pytest.raises(WriteBoundaryError) as excinfo:
+            ctx.update("Request", "REQ-501", {})
+    assert "must change something" in str(excinfo.value)

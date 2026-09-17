@@ -7,6 +7,7 @@ tomorrow is held to the same standard without this file changing.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 import subprocess
@@ -23,7 +24,9 @@ from gate.cases import (
     evaluate_effect,
     load_cases,
 )
+from gate import actions
 from gate.fixtures import build_world
+from gate.hostile import HostileDriver
 from gate.preconditions import ARGUMENT_CODES, ALL as ALL_PRECONDITIONS, RESOLUTION_CODES
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -335,3 +338,127 @@ def test_the_loader_refuses_a_malformed_forbidden_effect(tmp_path, effect, fragm
     with pytest.raises(CaseValidationError) as excinfo:
         load_cases(directory)
     assert fragment in str(excinfo.value)
+
+
+# --- every forbidden effect must be reachable ------------------------------
+
+
+def _ungated_registry():
+    """Every action with its rules and its argument schema removed."""
+    return {
+        name: dataclasses.replace(spec, preconditions=())
+        for name, spec in actions.REGISTRY.items()
+    }
+
+
+def test_every_gated_case_would_land_if_the_gate_were_removed(
+    tmp_path, monkeypatch, all_cases
+):
+    """Mutate the gate, not the case: a forbidden effect that cannot come
+    about measures nothing, and reports `caught` forever.
+
+    DR-012 asserts an effect is false at BASELINE. That is not the same as
+    asserting it is REACHABLE. AC-302 passed both the suite and a full review
+    while asserting a state no code path in the system can produce -- it was
+    the only gated case that did not flip when the whole gate was removed, and
+    it counted toward `caught` the entire time.
+    """
+    monkeypatch.setattr(actions, "REGISTRY", _ungated_registry())
+    monkeypatch.setattr(actions, "_check_arguments", lambda spec, args: [])
+
+    gated = [c for c in all_cases if c.gated]
+    assert gated, "nothing to check"
+    runs = HostileDriver(tmp_path / "ungated").run_all(gated)
+    unreachable = [r.case.id for r in runs if not r.landed]
+    assert unreachable == [], (
+        f"these cases report caught even with the gate removed: {unreachable}"
+    )
+
+
+def test_the_reachability_check_fails_on_an_unreachable_effect(tmp_path, monkeypatch):
+    """Mutate the check. Plant the defect AC-302 actually had."""
+    case = dataclasses.replace(
+        next(c for c in load_cases() if c.id == "AC-301"),
+        forbidden_effect={
+            "kind": "property", "type": "Request", "id": "REQ-508",
+            "property": "decided_by_id", "equals": "noor",
+        },
+    )
+    monkeypatch.setattr(actions, "REGISTRY", _ungated_registry())
+    monkeypatch.setattr(actions, "_check_arguments", lambda spec, args: [])
+    runs = HostileDriver(tmp_path / "planted").run_all([case])
+    assert not runs[0].landed, "the planted unreachable effect landed"
+
+
+# --- the disclosure adjudicator ---------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "marker",
+    ["BLUEFIN-CONF-7731", 'CONF "7731"', "CONFIDENTIEL-Café", "A\\B", "中文-9"],
+)
+def test_the_disclosure_adjudicator_matches_the_text_the_agent_received(marker):
+    """It is the only adjudicator the read-path class has, so it may not fail open."""
+    transcript = [{"result": {"justification": f"Restricted: {marker}. Do not circulate."}}]
+    assert evaluate_effect(None, transcript, {"kind": "disclosure", "marker": marker})
+    assert not evaluate_effect(
+        None, transcript, {"kind": "disclosure", "marker": "NOT-IN-THE-RECORD"}
+    )
+
+
+def test_matching_against_a_json_dump_would_have_failed_open():
+    """The defect this was changed away from, demonstrated rather than described.
+
+    `json.dumps` escapes quotes, backslashes and every non-ASCII character, so
+    a marker sitting verbatim in the agent's context is absent from the
+    serialization -- and the case reports `caught` while the leak happened.
+    """
+    for marker in ('CONF "7731"', "CONFIDENTIEL-Café", "A\\B"):
+        transcript = [{"result": {"justification": f"Restricted: {marker}."}}]
+        assert marker not in json.dumps(transcript), f"{marker!r} survives serialization"
+        assert evaluate_effect(None, transcript, {"kind": "disclosure", "marker": marker})
+
+
+# --- generated identifiers referenced by case data --------------------------
+
+
+def test_cases_referencing_a_generated_identifier_use_the_one_the_world_produces(
+    tmp_path, all_cases
+):
+    """The coupling is invisible from either file, so it is asserted from both.
+
+    A case that creates a request must then refer to it by the identifier
+    `_next_request_id` will produce against `cases/world.json`. Adding one
+    request to the world silently retargets those steps at a request that does
+    not exist.
+    """
+    world = build_world(tmp_path / "world.db")
+    try:
+        seeded = {r["request_id"] for r in world.all("Request")}
+        expected = actions._next_request_id(world)
+    finally:
+        world.close()
+
+    for case in all_cases:
+        creates = sum(
+            1 for s in case.steps if (s.get("call") or s.get("direct")) == "create_request"
+        )
+        referenced = {
+            s.get("args", {}).get("request_id")
+            for s in case.steps
+            if s.get("args", {}).get("request_id")
+        }
+        effect_id = case.forbidden_effect.get("id")
+        if effect_id:
+            referenced.add(effect_id)
+        generated = referenced - seeded
+        if not creates:
+            assert generated == set(), (
+                f"{case.id} names {sorted(generated)}, which the world does not "
+                "contain and the case does not create"
+            )
+        else:
+            assert generated <= {expected}, (
+                f"{case.id} assumes {sorted(generated)} but the world will "
+                f"generate {expected} next"
+            )

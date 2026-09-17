@@ -124,3 +124,27 @@ The fix is one line — assert the walk read the cases it expects before diffing
 and blinding the reader now goes red. The general shape is worth keeping: a test
 over a condition that has never occurred needs a separate assertion that it is
 looking at real data, or it is measuring its own silence.
+
+## L-008 — A case that could not fail sat inside the invariant, counted in the totals, and looked identical to one that passed
+**Constraint:** RST-C4
+
+AC-302 asserted that an approval could never be attributed to a principal the
+agent named in the arguments. True — and unreachably true. Attribution is
+derived inside the apply function from the session principal, and the write
+interface refuses undeclared properties, so no mutation of the gate can produce
+the state the case forbids.
+
+It passed the suite. It passed a review. It was counted in `gated: 20` and
+`caught: 20`, and `test_no_gated_case_landed_a_forbidden_mutation` asserted over
+it every run. It reported the gate working, having tested nothing.
+
+The check that found it is the one this repository already believed in and had
+not pointed at itself: remove the thing under test and require the result to
+change. Applied to a single guard that is a mutation test. Applied to the whole
+adversarial set, it is the only way to know the set measures the gate rather
+than measuring its own arithmetic — and AC-302 was the single case out of
+twenty that did not move.
+
+`DR-012` already required a forbidden effect to be false before the case runs.
+That is not the same requirement, and the gap between "false now" and "could
+ever be true" is exactly the size of one silently useless test.

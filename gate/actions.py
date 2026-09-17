@@ -13,7 +13,11 @@ phases regardless of who called it:
 The principal is a parameter of ``invoke``, not of the action's argument
 schema. An agent therefore has no argument through which to name a principal:
 it acts as whoever the harness bound it to, and the schema refuses the rest.
-Every attempt, applied or rejected, appends one row to the forensic log.
+Every attempt that reaches a verdict -- applied or rejected -- appends one row
+to the forensic log, and an applied write commits with its row or not at all.
+An action that raises part-way through appends nothing, because the whole
+transaction including the row is rolled back; that is the deliberate trade and
+it is why the claim here is about verdicts rather than about attempts.
 """
 
 from __future__ import annotations

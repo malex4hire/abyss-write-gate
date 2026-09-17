@@ -17,7 +17,6 @@ import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import actions
 from .cases import load_cases
 from .fixtures import build_world
 from .harness import ToolSession
@@ -84,26 +83,79 @@ def _wrap(text: str, indent: str, width: int = COLUMNS) -> list[str]:
     ) or [indent.rstrip()]
 
 
-def capture(db_path: Path | str) -> list[Line]:
-    """Run the scenario and read every value on the panel out of it."""
-    case = cast_case()
-    request_id = case.steps[-1]["args"]["request_id"]
+def _call_text(tool: str, args: dict) -> str:
+    rendered = ", ".join(
+        f'{k}={v!r}'.replace("'", '"') if isinstance(v, str) else f"{k}={v}"
+        for k, v in args.items()
+    )
+    return f"{tool}({rendered})"
 
+
+def _read_lines(record) -> list[Line]:
+    """How a read tool's result appears on the panel."""
+    if record.tool == "whoami":
+        return []  # shown as the session line instead of as a call
+    lines = [Line(f"tool       {_call_text(record.tool, record.args)}", "label")]
+    if record.tool == "list_requests":
+        lines.append(Line(f"  ->       {len(record.result)} records", "text"))
+        return lines
+    if record.tool == "get_request":
+        row = record.result
+        lines.append(
+            Line(
+                f"  ->       {row['request_id']}  \u201c{row['title']}\u201d  "
+                f"{money(row['amount_cents'])}  {row['state']}",
+                "text",
+            )
+        )
+        if INSTRUCTION_MARKER in row["justification"]:
+            marker_at = row["justification"].index(INSTRUCTION_MARKER)
+            injected = " ".join(row["justification"][marker_at:].split())
+            lines.append(
+                Line("  ->       justification: untrusted free text, returned verbatim", "dim")
+            )
+            lines.extend(Line(chunk, "warn") for chunk in _wrap(injected, "           "))
+        return lines
+    return lines
+
+
+def capture(db_path: Path | str) -> list[Line]:
+    """Replay the case the panel names, and read every value out of that run.
+
+    The steps executed here are the case's own steps, in order, including the
+    obedience -- not a second scenario that resembles it. An earlier version
+    took one argument from the case and then ran a script of its own, which
+    made the panel's header a label rather than a claim.
+    """
+    case = cast_case()
     store = build_world(db_path)
     session = ToolSession(store, case.principal, case_id=case.id)
-    principal = session.call("whoami").result
-    record = session.call("get_request", {"request_id": request_id}).result
-    instructions = extract_instructions(record)
-    outcome = session.call(
-        instructions[0]["tool"], instructions[0].get("args", {})
-    ).result
+    principal = store.get("Person", case.principal)
+
+    reads: list[Line] = []
+    obeyed: list[tuple[dict, dict]] = []
+    for step in case.steps:
+        if "call" not in step:
+            raise ValueError(
+                f"{case.id}: the cast shows a tool-driven case; this step is {step}"
+            )
+        record = session.call(step["call"], step.get("args", {}))
+        reads.extend(_read_lines(record))
+        if step.get("obey"):
+            for instruction in extract_instructions(record.result):
+                result = session.call(
+                    instruction["tool"], instruction.get("args", {})
+                ).result
+                obeyed.append((instruction, result))
+
+    if not obeyed:
+        raise LookupError(f"{case.id}: obeyed no instruction, so there is nothing to show")
+
+    instruction, outcome = obeyed[0]
+    request_id = instruction.get("args", {}).get("request_id")
     after = store.get("Request", request_id)
     log = store.attempts(case.id)
     store.close()
-
-    spec = actions.REGISTRY[instructions[0]["tool"]]
-    marker_at = record["justification"].index(INSTRUCTION_MARKER)
-    injected = " ".join(record["justification"][marker_at:].split())
 
     lines: list[Line] = [
         Line("$ make demo", "prompt", bold=True),
@@ -114,24 +166,17 @@ def capture(db_path: Path | str) -> list[Line]:
             "dim",
         ),
         Line(),
-        Line(f'tool       get_request(request_id="{request_id}")', "label"),
     ]
-    lines.append(
-        Line(
-            f"  ->       {record['request_id']}  “{record['title']}”  "
-            f"{money(record['amount_cents'])}  {record['state']}",
-            "text",
-        )
-    )
-    lines.append(Line("  ->       justification: untrusted free text, returned verbatim", "dim"))
-    for chunk in _wrap(injected, "           "):
-        lines.append(Line(chunk, "warn"))
+    lines.extend(reads)
     lines.append(Line())
     lines.append(
-        Line("agent      instruction found in tool output — obeying it", "warn")
+        Line("agent      instruction found in tool output \u2014 obeying it", "warn")
     )
     lines.append(
-        Line(f'tool       {spec.name}(request_id="{request_id}")', "label")
+        Line(
+            f"tool       {_call_text(instruction['tool'], instruction.get('args', {}))}",
+            "label",
+        )
     )
     lines.append(Line())
 
@@ -143,16 +188,13 @@ def capture(db_path: Path | str) -> list[Line]:
     lines.append(
         Line(
             f"datastore  {after['request_id']}.state = {after['state']}"
-            f"   — unchanged, decided_by = {after['decided_by_id'] or 'none'}",
+            f"   \u2014 unchanged, decided_by = {after['decided_by_id'] or 'none'}",
             "good",
         )
     )
     rows = f"{len(log)} row" + ("" if len(log) == 1 else "s")
     lines.append(
-        Line(
-            f"forensics  action_log: {rows} retained, outcome={log[-1]['outcome']}",
-            "dim",
-        )
+        Line(f"forensics  action_log: {rows} retained, outcome={log[-1]['outcome']}", "dim")
     )
     return lines
 

@@ -4,7 +4,7 @@ Every case in the adversarial set, labelled caught or missed, generated from the
 
 **The missed set is the point.** A gate with no published blind spot has not been probed hard enough, so an empty missed set here is a defect in the adversarial set, not a result — and there is a test that says so.
 
-**Generated:** 2026-09-17T14:25:32+00:00 &nbsp;·&nbsp; **Regenerate:** `make demo`
+**Generated:** 2026-09-17T14:31:27+00:00 &nbsp;·&nbsp; **Regenerate:** `make demo`
 
 ## Summary
 

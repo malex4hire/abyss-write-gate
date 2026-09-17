@@ -198,6 +198,10 @@ class ActionContext:
                 f"{obj.name}.{obj.key} is an identity and cannot be updated"
             )
         row = _validated_row(obj, changes, full=False)
+        if not row:
+            # `UPDATE t SET  WHERE ...` is a syntax error, and surfacing the
+            # write interface's own misuse as one tells a caller nothing.
+            raise WriteBoundaryError(f"{obj.name}: an update must change something")
         assignments = ", ".join(f"{name} = ?" for name in row)
         self._store._conn.execute(
             f"UPDATE {obj.table} SET {assignments} WHERE {obj.key} = ?",
