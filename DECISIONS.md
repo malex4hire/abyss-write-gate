@@ -235,3 +235,29 @@ default and not a fallback. Keeping the driver behind one seam is what leaves a
 live mode possible without inviting it into the gating set — a model-driven run
 would be a development aid, and a development aid does not get to decide whether
 the suite is green.
+
+## DR-019 — The build log has a fixed format so it can be checked
+**Time:** 2026-09-17T12:06:00-04:00
+**Constraint:** RST-C8
+**Decision:** Each record is `## DR-NNN — title` followed by `**Time:**`,
+`**Constraint:**`, `**Decision:**` and `**Rationale:**`. A test parses them and
+asserts the numbering has no gap, the timestamps are real and in order, every
+record names a constraint, and every constraint has at least one record.
+**Rationale:** A build log published as evidence is a deliverable, and a
+deliverable gets a gate like everything else here. The specific thing worth
+catching is a record with a decision and no reason, which is the shape a log
+degrades into: still ordered, still timestamped, no longer explaining anything.
+
+## DR-020 — Pace is inferred from the log; the README claims nothing about it
+**Time:** 2026-09-17T12:10:00-04:00
+**Constraint:** RST-C8
+**Decision:** No elapsed-time claim appears in the README, and a test asserts it
+against ten phrasings — paired with a test that the same check does not fire on
+ordinary prose.
+**Rationale:** Every claim in this repository names the gate that proves it, and
+no gate can prove elapsed time. A decision log with ordered timestamps is
+evidence and needs no claim attached; a reader who cares can read the sequence
+and draw their own conclusion, which is worth more than a sentence asserting it.
+The false-positive half of the test is not decoration: a check that flags
+"a five-state machine" would be disabled by the next person to hit it, and the
+true positives would go with it.
