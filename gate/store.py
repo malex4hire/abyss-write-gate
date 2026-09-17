@@ -146,6 +146,11 @@ class ActionContext:
 
     def __enter__(self) -> "ActionContext":
         conn = self._store._conn
+        # BEGIN first, and the order is load-bearing rather than stylistic.
+        # Opening the window inside the transaction means a rollback closes it:
+        # set the context row before BEGIN and a failed action leaves the gate
+        # standing open for every later caller. Mutated and confirmed red in
+        # tests/test_rst_c1_write_boundary.py.
         conn.execute("BEGIN")
         conn.execute(
             f"UPDATE {_CONTEXT_TABLE} SET action = ?, principal_id = ?, token = ? "

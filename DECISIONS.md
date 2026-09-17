@@ -276,3 +276,17 @@ system can reach — in an append-only log whose whole purpose is that it cannot
 A malformed effect surfaces as a `KeyError` mid-run, by which time the case has
 already been reported as something. Each guard was verified by removing it and
 watching the test go red.
+
+## DR-022 — Two assertions that could have passed having checked nothing
+**Time:** 2026-09-17T12:58:00-04:00
+**Constraint:** RST-C4
+**Decision:** The disposition-history walk now asserts it actually read a
+disposition map before diffing, and the rolled-back-action test now asserts the
+write window closed again afterwards.
+**Rationale:** Both were vacuous in the same way and neither showed it. If
+`_dispositions_at` returned nothing — a parsing change, a path change — every
+diff would be empty and the walk would pass having inspected no data. And a
+failed action that left its write context open would leave the gate standing
+open for every later caller, which is the worst version of that failure and the
+one a rollback can quietly miss. Both were mutated: blinding the walk goes red,
+and moving the context row outside the transaction goes red.

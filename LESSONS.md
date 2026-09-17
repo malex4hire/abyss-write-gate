@@ -107,3 +107,20 @@ The order is still the better habit, for a reason this case happens not to
 show: a test written after the code tends to test the code that exists rather
 than the requirement. The mutation check catches a guard that does nothing. It
 does not catch a guard that does the wrong thing confidently.
+
+## L-007 — A green history walk that read nothing looks exactly like a green history walk
+**Constraint:** RST-C4
+
+RST-C4 requires that a disposition change carry a decision record in the same
+commit. The test walks every commit, diffs the declared dispositions against the
+parent, and asserts `DECISIONS.md` was touched where they differ. It passed.
+
+It would also have passed if the function reading dispositions out of a commit
+returned nothing at all. No disposition has ever changed in this history, so the
+loop body never executes, and a parsing failure inside the walk is
+indistinguishable from a clean result.
+
+The fix is one line — assert the walk read the cases it expects before diffing —
+and blinding the reader now goes red. The general shape is worth keeping: a test
+over a condition that has never occurred needs a separate assertion that it is
+looking at real data, or it is measuring its own silence.

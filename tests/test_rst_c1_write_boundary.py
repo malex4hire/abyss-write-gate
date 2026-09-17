@@ -262,3 +262,11 @@ def test_a_landed_write_with_no_forensic_record_is_not_reachable(store, monkeypa
     assert dict(store.get("Request", "REQ-501")) == before, (
         "the write landed while its forensic record did not"
     )
+    # And the window closed again. A context left open by a failed action
+    # would leave the gate standing open for every later caller, which is the
+    # worst version of this failure and the one a rollback could easily miss.
+    with pytest.raises(sqlite3.IntegrityError) as excinfo:
+        store.connection().execute(
+            "UPDATE requests SET state = 'APPROVED' WHERE request_id = 'REQ-501'"
+        )
+    assert "WRITE_OUTSIDE_ACTION" in str(excinfo.value)

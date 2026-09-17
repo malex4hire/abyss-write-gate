@@ -266,6 +266,14 @@ def test_a_disposition_change_carries_a_decision_record_in_the_same_commit():
     commits = _git("log", "--format=%H", "--reverse").split()
     if len(commits) < 2:
         pytest.skip("history too short to diff")
+
+    # The walk below is vacuous if `_dispositions_at` silently returns nothing:
+    # every diff would be empty and the test would pass having inspected no
+    # data at all. Assert it actually reads the tree before trusting it.
+    at_head = _dispositions_at(commits[-1])
+    assert at_head, "the history walk read no dispositions and proves nothing"
+    assert set(at_head) == {c.id for c in load_cases()}
+
     for parent, commit in zip(commits, commits[1:]):
         changed = changed_dispositions(
             _dispositions_at(parent), _dispositions_at(commit)
