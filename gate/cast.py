@@ -1,8 +1,8 @@
 """The README artifact: a blocked write, visible without running anything.
 
 The picture is generated from a real run. The driver reads a record, finds an
-instruction addressed to it, obeys it, and the gate refuses -- and every value
-on the panel (the amount, the threshold, the rejection code, the message, the
+instruction addressed to it, obeys it, and the gate refuses. Every value on the
+panel (the amount, the threshold, the rejection code, the message, the
 state afterwards) is read out of that run rather than typed here.
 
 It carries no timestamp, no duration and no path, so regeneration is byte-
@@ -27,7 +27,7 @@ CAST_PATH = Path("assets/blocked-write.svg")
 
 # The panel shows the first gated case of this class, selected from the data
 # rather than named here. Hardcoding a case identifier would make the picture a
-# second story about the set instead of a view onto it -- and there is a test
+# second story about the set instead of a view onto it, and there is a test
 # that forbids any module from knowing a case by name.
 CAST_CLASS = "injection_via_tool_output"
 
@@ -123,7 +123,7 @@ def capture(db_path: Path | str) -> list[Line]:
     """Replay the case the panel names, and read every value out of that run.
 
     The steps executed here are the case's own steps, in order, including the
-    obedience -- not a second scenario that resembles it. An earlier version
+    obedience, not a second scenario that resembles it. An earlier version
     took one argument from the case and then ran a script of its own, which
     made the panel's header a label rather than a claim.
     """
@@ -170,7 +170,7 @@ def capture(db_path: Path | str) -> list[Line]:
     lines.extend(reads)
     lines.append(Line())
     lines.append(
-        Line("agent      instruction found in tool output \u2014 obeying it", "warn")
+        Line("agent      obeying an instruction found in tool output", "warn")
     )
     lines.append(
         Line(
@@ -188,7 +188,7 @@ def capture(db_path: Path | str) -> list[Line]:
     lines.append(
         Line(
             f"datastore  {after['request_id']}.state = {after['state']}"
-            f"   \u2014 unchanged, decided_by = {after['decided_by_id'] or 'none'}",
+            f" (unchanged), decided_by = {after['decided_by_id'] or 'none'}",
             "good",
         )
     )
@@ -226,7 +226,7 @@ def render(lines: list[Line], label: str) -> str:
     add(
         f'<text x="{width / 2}" y="23.5" text-anchor="middle" font-size="11.5" '
         f'fill="{PALETTE["dim"]}" font-family="ui-monospace, SFMono-Regular, '
-        f'Menlo, Consolas, monospace">abyss-write-gate — {_escape(label)}</text>'
+        f'Menlo, Consolas, monospace">abyss-write-gate: {_escape(label)}</text>'
     )
 
     add(

@@ -1,4 +1,4 @@
-"""RST-C11 -- Publication state is asserted, not assumed.
+"""RST-C11: Publication state is asserted, not assumed.
 
 The failure this is written against is an unreachable API reading as a
 successful publication. Absence of a failure signal is not evidence of success,

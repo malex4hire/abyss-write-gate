@@ -3,8 +3,8 @@
 Three outcomes, not two. `PASS` and `FAIL` are claims about the repository;
 `UNAVAILABLE` is a claim about the evidence. A network error reaching the
 public URL is not a broken link, an unreachable API is not a failed
-publication, and neither may read as a success -- absence of a failure signal
-is not evidence of success.
+publication, and neither may read as a success: absence of a failure signal is
+not evidence of success.
 
 Fetching is injected so the failure modes can be exercised without a network
 and without breaking the published repository to find out whether a check would
@@ -362,7 +362,7 @@ def check_register(fetcher: Fetcher, owner: str, name: str, branch: str, root: P
         return Result(
             "register",
             FAIL,
-            "the register did not render as markdown -- no table in the rendered view",
+            "the register did not render as markdown: no table in the rendered view",
         )
     if f"Read {expected} first" not in html:
         return Result(

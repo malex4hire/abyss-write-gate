@@ -1,4 +1,4 @@
-"""RST-C6 -- A blocked write is visible without executing anything.
+"""RST-C6: A blocked write is visible without executing anything.
 
 The artifact is committed, self-contained, and regenerable from the same entry
 point that produces the register. It carries no volatile field at all, so the
@@ -139,7 +139,7 @@ def test_the_artifact_replays_the_case_it_names():
     """The header is a claim about which run produced the panel, not a label.
 
     An earlier version took one argument from the case and then ran a script of
-    its own -- a real run, but not a run of the case named on the panel.
+    its own: a real run, but not a run of the case named on the panel.
     """
     svg = ARTIFACT.read_text(encoding="utf-8")
     case = cast.cast_case()

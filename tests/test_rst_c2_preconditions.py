@@ -1,4 +1,4 @@
-"""RST-C2 -- Preconditions attach to the action, not the caller.
+"""RST-C2: Preconditions attach to the action, not the caller.
 
 Every case here invokes the action layer DIRECTLY. There is no agent in this
 file. If a rule only holds when the agent harness is in the call stack, nothing
@@ -139,7 +139,7 @@ def test_no_module_outside_the_rule_layer_mentions_a_rejection_code():
         text = path.read_text(encoding="utf-8")
         # Whole-token match. `TERMINAL_STATES` in the ontology is not a
         # reference to the `TERMINAL_STATE` rejection code, and a substring
-        # check that says it is has a false positive -- which is worse than no
+        # check that says it is has a false positive, which is worse than no
         # check, because the next reader disables it.
         hits = sorted(
             code

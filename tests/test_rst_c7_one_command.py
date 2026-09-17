@@ -1,4 +1,4 @@
-"""RST-C7 -- One command, no credential.
+"""RST-C7: One command, no credential.
 
 The clone test runs against HEAD, which is what "a clean clone" means: a reader
 gets the committed tree, not the working one. It is skipped outside a git

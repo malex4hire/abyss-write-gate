@@ -3,8 +3,8 @@
 Every case gets its OWN freshly seeded database. Cases do not share state and
 cannot see each other, so a disposition is a property of the case rather than
 of where it happened to sit in the ordering. The databases are retained in the
-run directory afterwards -- a rejected attempt is a forensic record, and the
-whole point of keeping it is that someone can open it later and look.
+run directory afterwards, because a rejected attempt is a forensic record and
+the whole point of keeping it is that someone can open it later and look.
 """
 
 from __future__ import annotations

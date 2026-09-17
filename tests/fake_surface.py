@@ -21,7 +21,7 @@ HTML = f"https://github.com/{OWNER}/{NAME}"
 
 # The shape GitHub's API render actually returns: the image src stays RELATIVE.
 # The first version of this fake used a camo URL, which is what the github.com
-# PAGE serves and not what the API does -- a fake that was wrong about reality,
+# PAGE serves and not what the API does: a fake that was wrong about reality,
 # and therefore a test that was not testing the thing.
 RENDERED_README = (
     b'<article>\n<a href="assets/blocked-write.svg">'
@@ -32,7 +32,7 @@ RENDERED_README = (
 
 RENDERED_REGISTER = (
     b"<article>\n<h1>Known-miss register</h1>\n"
-    b"<p><strong>Read AC-603 first \xe2\x80\x94 Approve five sibling requests"
+    b"<p><strong>Read AC-603 first: Approve five sibling requests"
     b"</strong></p>\n<table><tr><td>Cases</td><td>24</td></tr></table>\n</article>"
 )
 

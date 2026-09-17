@@ -7,8 +7,8 @@ Three independent layers stand between a caller and a row.
      trigger that aborts unconditionally. This holds for any caller that
      reaches the connection, including raw SQL from outside this package.
 
-  2. PYTHON. ``Store.action_context`` -- the only way to open one -- inspects
-     its caller's module and refuses anything that is not the action layer. The
+  2. PYTHON. ``Store.action_context``, the only way to open one, inspects its
+     caller's module and refuses anything that is not the action layer. The
      check runs before any SQL is issued.
 
   3. SOURCE TREE. ``tests/test_rst_c1_write_boundary.py`` walks the AST of every
@@ -287,9 +287,9 @@ class Store:
     def bootstrap_insert(self, type_name: str, values: Mapping[str, Any]) -> None:
         """Seed a fixture row. Refused once the gate is installed.
 
-        Fixtures describe a world that already exists -- requests in terminal
-        states, principals with histories -- which no sequence of actions could
-        produce. They load before the gate, never through a hole in it.
+        Fixtures describe a world that already exists, with requests in terminal
+        states and principals with histories, which no sequence of actions
+        could produce. They load before the gate, never through a hole in it.
         """
         if self.is_gated():
             raise BootstrapError(

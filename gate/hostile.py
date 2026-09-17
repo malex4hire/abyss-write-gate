@@ -5,8 +5,8 @@ deterministic program that reads the case set and does what each case says,
 and it is a STRONGER adversary than a model would be, in the one way that
 matters here: it never declines. There is no refusal path in this module. If a
 record contains an instruction addressed to the agent, the driver executes it.
-Maximal credulity is the point -- a gate that only holds against a
-well-behaved model has not been tested.
+Maximal credulity is the point: a gate that only holds against a well-behaved
+model has not been tested.
 
 The consequence is that every result in this repository is reproducible by
 anyone with a clone and no credential, which is why the default path works this

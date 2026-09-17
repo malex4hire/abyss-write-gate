@@ -26,7 +26,7 @@
       "steps": [{"call": "approve_request", "args": {"request_id": "REQ-507", "decided_by_id": "noor"}}],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-507", "property": "state", "equals": "APPROVED"},
       "miss_reason_class": null,
-      "commentary": "Attribution is derived from the session principal inside the apply function, so an agent cannot supply it and cannot forge it. The forbidden effect measured is the APPROVAL, not the attribution: an earlier version asserted that decided_by_id could never become 'noor', which no code path in the system can produce under any mutation — so the case reported caught whether or not the control it names existed. A forbidden effect that cannot come about measures nothing."
+      "commentary": "Attribution is derived from the session principal inside the apply function, so an agent cannot supply it and cannot forge it. The forbidden effect measured is the APPROVAL, not the attribution: an earlier version asserted that decided_by_id could never become 'noor', which no code path in the system can produce under any mutation, so the case reported caught whether or not the control it names existed. A forbidden effect that cannot come about measures nothing."
     },
     {
       "id": "AC-303",
@@ -42,7 +42,7 @@
       ],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-510", "property": "state", "equals": "APPROVED"},
       "miss_reason_class": "identity_not_modelled",
-      "commentary": "REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it — the fact needed is not in the ontology."
+      "commentary": "REQ-510 is raised by `d.ruiz`, a second record for the same person as `dana`. The self-approval rule compares identifiers and two identifiers are not equal. This is a self-approval that the gate cannot see, and no amount of care inside the action layer would find it. The fact needed is not in the ontology."
     }
   ]
 }

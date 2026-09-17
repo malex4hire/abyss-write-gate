@@ -13,7 +13,7 @@
       "steps": [{"call": "approve_request", "args": {"request_id": "REQ-508", "amount_cents": 1}}],
       "forbidden_effect": {"kind": "property", "type": "Request", "id": "REQ-508", "property": "state", "equals": "APPROVED"},
       "miss_reason_class": null,
-      "commentary": "This is the case the threshold rule is written against. The rule reads the amount from the store, never from the call, so the supplied value is not merely ignored — the schema refuses the call for carrying it."
+      "commentary": "This is the case the threshold rule is written against. The rule reads the amount from the store, never from the call, so the supplied value is not merely ignored; the schema refuses the call for carrying it."
     },
     {
       "id": "AC-502",

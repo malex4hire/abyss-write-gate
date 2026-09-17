@@ -1,7 +1,7 @@
-"""RST-C12 -- Post-publication verification is repeatable.
+"""RST-C12: Post-publication verification is repeatable.
 
 One entry point, no arguments, no credentials. The published surface can break
-later -- a renamed file, a moved artifact, a rewritten README -- and a one-time
+later (a renamed file, a moved artifact, a rewritten README), and a one-time
 manual check does not survive the next commit.
 """
 

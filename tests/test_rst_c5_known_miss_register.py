@@ -1,4 +1,4 @@
-"""RST-C5 -- The known-miss register is non-empty and generated.
+"""RST-C5: The known-miss register is non-empty and generated.
 
 The register is the highest-value artifact here, so the assertions on it are
 the strictest: it must regenerate byte-identically apart from the one

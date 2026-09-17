@@ -1,4 +1,4 @@
-"""RST-C10 -- The published surface is verified anonymously.
+"""RST-C10: The published surface is verified anonymously.
 
 Every check here is exercised twice: against a surface that is correct, and
 against one deliberately broken. A check that has only been observed passing

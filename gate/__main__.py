@@ -29,7 +29,7 @@ def _summarise(result: RunResult, artifacts: list[Path], stream) -> None:
     write = lambda text="": print(text, file=stream)  # noqa: E731
 
     write()
-    write("  abyss-write-gate — adversarial run")
+    write("  abyss-write-gate: adversarial run")
     write("  " + "-" * 56)
     for cls, runs in sorted(result.by_class().items()):
         caught = sum(1 for r in runs if r.disposition == "caught")
@@ -50,7 +50,7 @@ def _summarise(result: RunResult, artifacts: list[Path], stream) -> None:
         write(f"  wrote {path}")
     write()
     if result.ok():
-        write("  VERIFIED — every case reached the disposition it declares.")
+        write("  VERIFIED. Every case reached the disposition it declares.")
     else:
         for case_id, expected, observed in result.unmet_expectations:
             write(f"  FAIL  {case_id}: expected {expected}, observed {observed}")

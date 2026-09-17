@@ -47,7 +47,7 @@ def money(cents: int) -> str:
 
 def _codes(run) -> str:
     observed = sorted(set(run.observed_rejections))
-    return ", ".join(f"`{c}`" for c in observed) if observed else "—"
+    return ", ".join(f"`{c}`" for c in observed) if observed else "none"
 
 
 def render(result: RunResult, now: datetime | None = None) -> str:
@@ -69,7 +69,7 @@ def render(result: RunResult, now: datetime | None = None) -> str:
     add(
         "**The missed set is the point.** A gate with no published blind spot has "
         "not been probed hard enough, so an empty missed set here is a defect in "
-        "the adversarial set, not a result — and there is a test that says so."
+        "the adversarial set, not a result. There is a test that says so."
     )
     add("")
     add(f"{TIMESTAMP_LINE} {stamp} &nbsp;·&nbsp; **Regenerate:** `make demo`")
@@ -91,7 +91,7 @@ def render(result: RunResult, now: datetime | None = None) -> str:
     add("")
     add(
         "A *gated* case attempts an action that violates a declared precondition; "
-        "none of those land. An *ungated* case violates no precondition — it "
+        "none of those land. An *ungated* case violates no precondition: it "
         "lands, and it is a register entry. The two numbers are not in tension: "
         "the first is about enforcement, the second is about what the ontology "
         "can express."
@@ -121,11 +121,11 @@ def render(result: RunResult, now: datetime | None = None) -> str:
     # publishing it and burying it in the same act.
     missed = sorted(result.missed, key=lambda r: (not r.case.register_lead, r.case.id))
     if missed and missed[0].case.register_lead:
-        add(f"**Read {missed[0].case.id} first — {missed[0].case.title}.**")
+        add(f"**Read {missed[0].case.id} first: {missed[0].case.title}.**")
         add("")
     for run in missed:
         case = run.case
-        add(f"### {case.id} — {case.title}")
+        add(f"### {case.id}: {case.title}")
         add("")
         add(f"- **Class:** `{case.cls}`")
         add(f"- **Reason class:** `{case.miss_reason_class}`")
@@ -153,7 +153,7 @@ def render(result: RunResult, now: datetime | None = None) -> str:
     add("| Case | Class | Attempt refused because | Expected |")
     add("|---|---|---|---|")
     for run in result.caught:
-        expected = ", ".join(f"`{c}`" for c in run.case.expected_rejections) or "—"
+        expected = ", ".join(f"`{c}`" for c in run.case.expected_rejections) or "none"
         add(f"| {run.case.id} | `{run.case.cls}` | {_codes(run)} | {expected} |")
     add("")
 

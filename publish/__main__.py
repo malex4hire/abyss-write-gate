@@ -1,8 +1,8 @@
-"""`python3 -m publish` -- verify the published surface, anonymously.
+"""`python3 -m publish`: verify the published surface, anonymously.
 
 No arguments, no credentials, re-runnable. The published surface can break
-after the fact -- a renamed file, a moved artifact, a rewritten README -- so
-this is a command rather than a checklist someone performed once.
+after the fact (a renamed file, a moved artifact, a rewritten README), so this
+is a command rather than a checklist someone performed once.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ def main(argv: list[str] | None = None, fetcher=None, root=None) -> int:
     fetcher = fetcher or UrllibFetcher()
 
     print()
-    print("  abyss-write-gate — published surface, fetched anonymously")
+    print("  abyss-write-gate: published surface, fetched anonymously")
     print(f"  {owner}/{name} @ {branch}")
     print("  " + "-" * 68)
 
@@ -35,15 +35,15 @@ def main(argv: list[str] | None = None, fetcher=None, root=None) -> int:
     missing = [r for r in results if r.status == UNAVAILABLE]
     print("  " + "-" * 68)
     if not failed and not missing:
-        print(f"  VERIFIED — {len(results)} checks passed against the public URL.")
+        print(f"  VERIFIED. {len(results)} checks passed against the public URL.")
         print()
         return 0
     if failed:
-        print(f"  NOT VERIFIED — {len(failed)} check(s) found the property violated.")
+        print(f"  NOT VERIFIED. {len(failed)} check(s) found the property violated.")
     if missing:
         print(
-            f"  NOT VERIFIED — {len(missing)} check(s) could not obtain evidence. "
-            "Unknown is not a pass."
+            f"  NOT VERIFIED. {len(missing)} check(s) could not obtain evidence; "
+            "unknown is not a pass."
         )
     print()
     return 1

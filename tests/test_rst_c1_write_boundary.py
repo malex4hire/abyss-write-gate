@@ -1,4 +1,4 @@
-"""RST-C1 -- Actions are the only write path.
+"""RST-C1: Actions are the only write path.
 
 Each layer is tested by ATTEMPTING the bypass. A check that passes only because
 no current caller attempts the thing it forbids proves nothing, so every test
@@ -236,7 +236,7 @@ def test_an_action_context_cannot_rewrite_an_objects_identity(store):
     """Substituting a key is not an update.
 
     This test constructs the context class directly, which no module outside
-    the action layer may do -- that is what the AST scan above enforces, and it
+    the action layer may do. That is what the AST scan above enforces, and it
     is the layer that covers what the frame guard cannot. Doing it here is how
     the guard inside `update` gets exercised at all.
     """

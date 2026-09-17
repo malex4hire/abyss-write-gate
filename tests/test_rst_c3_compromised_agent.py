@@ -1,4 +1,4 @@
-"""RST-C3 -- The compromised-agent invariant.
+"""RST-C3: The compromised-agent invariant.
 
 An agent actively attempting every forbidden write lands none of them.
 
@@ -7,7 +7,7 @@ asserts "nothing landed" passes trivially if nothing was attempted. So the
 attempt ledger is asserted too, and the assertion itself is mutated against a
 run with its attempts stripped.
 
-Scope, stated rather than assumed: the invariant is over the GATED set -- the
+Scope, stated rather than assumed: the invariant is over the GATED set, the
 cases whose attempted action violates a declared precondition. The four ungated
 cases land by construction; they are the known-miss register, and asserting
 they do not land would be asserting that this repository has no blind spot.

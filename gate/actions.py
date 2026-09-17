@@ -6,15 +6,17 @@ phases regardless of who called it:
     1. ARGUMENTS   strict schema. Unknown, missing or wrongly typed arguments
                    are refused before anything is read.
     2. RESOLUTION  identifiers become rows, or the call is refused.
-    3. PRECONDITIONS  every rule the action declares is evaluated -- all of
-                   them, so the rejection names every failure, not the first.
+    3. PRECONDITIONS  every rule the action declares is evaluated,
+                   all of them, so the rejection names every failure rather
+                   than the first.
     4. APPLY       and only now is a write context opened.
 
 The principal is a parameter of ``invoke``, not of the action's argument
 schema. An agent therefore has no argument through which to name a principal:
 it acts as whoever the harness bound it to, and the schema refuses the rest.
 Every attempt appends exactly one row to the forensic log. An applied write
-commits with its row or not at all -- they are the same transaction. An action
+commits with its row or not at all, because they are the same transaction. An
+action
 that raises part-way through rolls that transaction back, row included, and
 then appends an ERRORED row outside it, so a crash is a record rather than a
 silence.
@@ -92,7 +94,7 @@ class Result:
 
 
 # ---------------------------------------------------------------------------
-# apply functions -- each opens exactly one write context
+# apply functions: each opens exactly one write context
 # ---------------------------------------------------------------------------
 
 
@@ -366,12 +368,12 @@ def invoke(
 
     facts = Facts(principal=principal, args=args, request=request)
 
-    # 3. preconditions -- all of them
+    # 3. preconditions, all of them
     failures = tuple(p.code for p in spec.preconditions if not p.holds(facts))
     if failures:
         return refuse(failures)
 
-    # 4. apply -- the mutation and its forensic record commit together, so a
+    # 4. apply. The mutation and its forensic record commit together, so a
     #    landed write with no row in the log is not a state this can reach.
     try:
         with store.action_context(action_name, principal_id) as ctx:
@@ -390,7 +392,7 @@ def invoke(
         # The transaction has rolled back and taken the row above with it. A
         # crash that leaves no trace of having been attempted is the one gap
         # atomicity opens, so the record is appended outside the transaction
-        # that just failed -- and a failure to record must not mask the
+        # that just failed, and a failure to record must not mask the
         # failure being recorded.
         try:
             store.record_attempt(

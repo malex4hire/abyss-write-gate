@@ -1,4 +1,4 @@
-"""RST-C8 -- Build log and legible history.
+"""RST-C8: Build log and legible history.
 
 The log is published because the sequence is part of what is being shown. That
 makes its format a thing to check rather than a thing to trust, and it makes the
@@ -20,9 +20,9 @@ DECISIONS = ROOT / "DECISIONS.md"
 LESSONS = ROOT / "LESSONS.md"
 README = ROOT / "README.md"
 
-RECORD = re.compile(r"^## (DR-(\d{3})) — (.+)$", re.M)
+RECORD = re.compile(r"^## (DR-(\d{3})): (.+)$", re.M)
 FIELD = re.compile(r"^\*\*(Time|Constraint|Decision|Rationale):\*\*\s*(.*)$", re.M)
-RST_IDS = tuple(f"RST-C{n}" for n in range(1, 13))
+RST_IDS = tuple(f"RST-C{n}" for n in range(1, 17))
 
 # Phrasings that would assert how long the work took. No gate can prove elapsed
 # time, so none of these belong in the README.
@@ -99,7 +99,7 @@ def test_the_records_are_ordered(records):
 
 def test_the_record_parser_rejects_a_record_with_no_rationale():
     """Mutate the check."""
-    planted = "## DR-999 — A decision with no reason\n**Time:** 2026-01-01T00:00:00+00:00\n**Decision:** Do the thing.\n"
+    planted = "## DR-999: A decision with no reason\n**Time:** 2026-01-01T00:00:00+00:00\n**Decision:** Do the thing.\n"
     parsed = _parse_records(planted)
     assert parsed and parsed[0]["fields"].get("Rationale") is None
 
@@ -112,7 +112,7 @@ def test_the_log_covers_every_constraint(records):
 def test_lessons_are_published_and_each_names_a_constraint():
     assert LESSONS.exists()
     text = LESSONS.read_text(encoding="utf-8")
-    entries = re.findall(r"^## (L-\d{3}) — (.+)$", text, re.M)
+    entries = re.findall(r"^## (L-\d{3}): (.+)$", text, re.M)
     assert entries, "no lessons are published"
     assert text.count("**Constraint:**") == len(entries)
 

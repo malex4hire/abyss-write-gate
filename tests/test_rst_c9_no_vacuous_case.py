@@ -1,4 +1,4 @@
-"""RST-C9 -- No case passes vacuously.
+"""RST-C9: No case passes vacuously.
 
 With the gate removed entirely, every gated case must flip to `missed`. A gated
 case that still reports `caught` against no gate at all is asserting a state the

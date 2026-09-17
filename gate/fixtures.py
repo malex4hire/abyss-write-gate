@@ -2,7 +2,7 @@
 
 Fixtures describe a world that already exists: requests sitting in terminal
 states, principals with thresholds already set. No sequence of actions could
-produce that world, so seeding does not run through the action layer -- it runs
+produce that world, so seeding does not run through the action layer. It runs
 BEFORE the gate exists, and the gate is installed on the way out.
 
 That ordering is the whole trick, and it is checked from both ends:

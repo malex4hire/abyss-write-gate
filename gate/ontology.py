@@ -2,9 +2,9 @@
 
 Two things here are load-bearing rather than decorative.
 
-1. PROVENANCE. Every property declares whether it is ``MEASURED`` -- recorded
-   by a system of record, a fact -- or ``MODEL_DERIVED`` -- produced by a
-   language model, a proposal. No precondition may read a MODEL_DERIVED
+1. PROVENANCE. Every property declares whether it is ``MEASURED`` (recorded by
+   a system of record, a fact) or ``MODEL_DERIVED`` (produced by a language
+   model, a proposal). No precondition may read a MODEL_DERIVED
    property. A gate that can be moved by model output is not a gate, and
    ``tests/test_rst_c2_preconditions.py`` asserts the separation both from the
    declared reads and from the source tree.

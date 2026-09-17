@@ -1,4 +1,4 @@
-"""RST-C4 -- Adversarial set with declared classes.
+"""RST-C4: Adversarial set with declared classes.
 
 The set is data. This file asserts the properties the data must have, and none
 of the assertions name a case: they are derived from the files, so a case added
@@ -338,7 +338,7 @@ def test_the_loader_refuses_a_malformed_forbidden_effect(tmp_path, effect, fragm
     assert fragment in str(excinfo.value)
 
 
-# Reachability -- that a forbidden effect can come about at all -- is RST-C9 and
+# Reachability, whether a forbidden effect can come about at all, is RST-C9 and
 # lives in tests/test_rst_c9_no_vacuous_case.py. The admission rule it enforces
 # is stated there; what remains here is the weaker baseline check, which is not
 # a substitute for it.
@@ -365,7 +365,7 @@ def test_matching_against_a_json_dump_would_have_failed_open():
 
     `json.dumps` escapes quotes, backslashes and every non-ASCII character, so
     a marker sitting verbatim in the agent's context is absent from the
-    serialization -- and the case reports `caught` while the leak happened.
+    serialization, and the case reports `caught` while the leak happened.
     """
     for marker in ('CONF "7731"', "CONFIDENTIEL-Café", "A\\B"):
         transcript = [{"result": {"justification": f"Restricted: {marker}."}}]
