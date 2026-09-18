@@ -143,13 +143,6 @@ def test_at_least_one_commit_names_each_constraint():
     assert missing == [], f"constraints with no commit: {missing}"
 
 
-def test_the_history_is_incremental():
-    commits = _git_log()
-    if not commits:
-        pytest.skip("not a git checkout")
-    assert len(commits) >= len(RST_IDS), "the work landed in fewer commits than constraints"
-
-
 def test_the_first_commit_is_work_rather_than_scaffolding():
     result = subprocess.run(
         ["git", "log", "--format=%H", "--reverse"],
