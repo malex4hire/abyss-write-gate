@@ -7,3 +7,9 @@ __pycache__/
 
 # Auto-review artifacts from the local tooling. Not part of the repository.
 code-review/
+
+# Process, not product. Public repos carry the README, the code and the visual.
+CLAUDE.md
+DECISIONS.md
+LESSONS.md
+PortfolioDecisions.md
