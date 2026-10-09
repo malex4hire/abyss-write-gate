@@ -2,6 +2,8 @@
 
 # abyss-write-gate
 
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+
 An agent with write access, deliberately compromised, attempting every
 forbidden state change it can reach, against a deterministic gate at the write
 boundary that refuses all of them. Then the part nobody publishes: the cases the
